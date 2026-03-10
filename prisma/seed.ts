@@ -1716,13 +1716,189 @@ Design a robust error handling and alerting strategy for this integration:
     ],
   });
 
+  // ── Additional Role Templates ─────────────────────────────────────────────
+
+  await createAssessment(admin.id, {
+    title: 'Go (Golang) Developer Assessment',
+    description: 'Tests Go fundamentals, goroutines, interfaces, error handling, and REST API design.',
+    roleType: 'go-developer', instructions: 'Answer all questions. Code should be written in Go.',
+    timeLimit: 60, passingScore: 70, templateSlug: 'go-developer-starter',
+    sections: [
+      { title: 'Go Fundamentals', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'Goroutine vs Thread', body: 'What is the primary advantage of goroutines over OS threads?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['go', 'concurrency'], config: { options: [{ label: 'Goroutines are faster to create and use less memory', value: 'A' }, { label: 'Goroutines run on separate CPU cores automatically', value: 'B' }, { label: 'Goroutines cannot block each other', value: 'C' }, { label: 'Goroutines support preemptive scheduling', value: 'D' }], correct: 'A', explanation: 'Goroutines are multiplexed onto OS threads by the Go runtime, using ~2KB vs ~1MB for OS threads.' } },
+        { type: 'CODING_CHALLENGE', title: 'Concurrent Fan-Out', body: 'Write a Go function that takes a slice of URLs and fetches them all concurrently using goroutines and channels. Return a map of URL → response body (or error string).', points: 20, difficulty: 'hard', evaluator: 'code', skillTags: ['go', 'goroutines', 'channels'], config: { language: 'go', starterCode: 'package main\n\nimport "net/http"\n\nfunc fetchAll(urls []string) map[string]string {\n    // your code here\n    return nil\n}', testCases: [] } },
+        { type: 'SHORT_ANSWER', title: 'Go Error Handling Patterns', body: 'How does Go handle errors differently from exceptions in Java/Python? What are the best practices for wrapping and propagating errors in Go 1.13+?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['go', 'error-handling'], config: {} },
+      ]},
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'Python / Django Developer Assessment',
+    description: 'Tests Python proficiency, Django ORM, REST APIs, async, and Pythonic coding.',
+    roleType: 'python-developer', instructions: 'Answer all questions. Code should be Python 3.10+.',
+    timeLimit: 60, passingScore: 70, templateSlug: 'python-developer-starter',
+    sections: [
+      { title: 'Python Fundamentals', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'Python GIL', body: 'What does the Python GIL (Global Interpreter Lock) prevent?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['python', 'concurrency', 'gil'], config: { options: [{ label: 'Two Python processes running simultaneously', value: 'A' }, { label: 'Multiple Python threads executing Python bytecode simultaneously', value: 'B' }, { label: 'Python code from importing C extensions', value: 'C' }, { label: 'Circular imports between modules', value: 'D' }], correct: 'B', explanation: 'The GIL ensures only one thread executes Python bytecode at a time, limiting CPU-bound multithreading.' } },
+        { type: 'CODING_CHALLENGE', title: 'Python Decorators', body: 'Write a Python decorator `@retry(max_attempts=3, delay=1)` that retries a function up to `max_attempts` times on any exception, waiting `delay` seconds between attempts. Raise the last exception if all attempts fail.', points: 20, difficulty: 'hard', evaluator: 'code', skillTags: ['python', 'decorators', 'error-handling'], config: { language: 'python', starterCode: 'import time\nfrom functools import wraps\n\ndef retry(max_attempts=3, delay=1):\n    # your code here\n    pass', testCases: [] } },
+      ]},
+      { title: 'Django & REST APIs', questions: [
+        { type: 'SHORT_ANSWER', title: 'Django ORM N+1', body: 'Explain the N+1 query problem in Django. Give a concrete example and show how to fix it using Django ORM methods.', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['django', 'orm', 'performance'], config: {} },
+        { type: 'SCENARIO', title: 'Django REST API Design', body: 'Design a Django REST Framework API for a blog platform with Posts, Comments, and Users. Include serializer design, viewsets, permissions, and pagination strategy.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['django', 'drf', 'api-design'], config: { rubric: [{ criterion: 'Correct serializer nesting and read/write separation', maxPoints: 7, guidance: '' }, { criterion: 'ViewSets with appropriate actions', maxPoints: 6, guidance: '' }, { criterion: 'Permission classes (IsAuthenticated, IsOwnerOrReadOnly)', maxPoints: 6, guidance: '' }, { criterion: 'Pagination and filtering', maxPoints: 6, guidance: '' }] } },
+      ]},
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'PHP / Laravel Developer Assessment',
+    description: 'Tests PHP 8, Laravel, Eloquent ORM, queues, and API development.',
+    roleType: 'php-laravel-developer', instructions: 'Answer all questions. Code should be PHP 8+ / Laravel 10+.',
+    timeLimit: 60, passingScore: 70, templateSlug: 'php-laravel-starter',
+    sections: [
+      { title: 'PHP & Laravel Core', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'Laravel Service Container', body: 'What is the primary purpose of the Laravel Service Container?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['laravel', 'di', 'service-container'], config: { options: [{ label: 'Managing database connections', value: 'A' }, { label: 'Dependency injection and class resolution', value: 'B' }, { label: 'Routing HTTP requests', value: 'C' }, { label: 'Caching query results', value: 'D' }], correct: 'B', explanation: 'The Service Container resolves class dependencies and manages bindings for dependency injection.' } },
+        { type: 'SHORT_ANSWER', title: 'Laravel Queues & Jobs', body: 'Explain how Laravel queues work. When would you use a queued job versus a synchronous operation? How do you handle failed jobs?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['laravel', 'queues', 'jobs'], config: {} },
+        { type: 'CODING_CHALLENGE', title: 'Eloquent Relationships', body: 'A User has many Orders, and each Order has many Products (many-to-many via order_items). Write an Eloquent query to fetch all users who placed more than 5 orders in the last 30 days, eager-loading their orders and total spend.', points: 20, difficulty: 'hard', evaluator: 'code', skillTags: ['laravel', 'eloquent', 'database'], config: { language: 'php', starterCode: '<?php\n// Write your Eloquent query here\n$users = User::query()\n    // ...\n    ->get();', testCases: [] } },
+      ]},
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'iOS / Swift Developer Assessment',
+    description: 'Tests Swift fundamentals, UIKit/SwiftUI, Combine, and iOS architecture patterns.',
+    roleType: 'ios-developer', instructions: 'Answer all questions. Code should be Swift 5.9+.',
+    timeLimit: 60, passingScore: 70, templateSlug: 'ios-developer-starter',
+    sections: [
+      { title: 'Swift & iOS Core', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'Swift Memory Management', body: 'What causes a retain cycle in Swift?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['swift', 'arc', 'memory'], config: { options: [{ label: 'Using value types (structs)', value: 'A' }, { label: 'Two objects holding strong references to each other', value: 'B' }, { label: 'Using optional chaining', value: 'C' }, { label: 'Allocating large arrays', value: 'D' }], correct: 'B', explanation: 'A retain cycle occurs when two objects hold strong references to each other, preventing ARC from deallocating either.' } },
+        { type: 'SHORT_ANSWER', title: 'SwiftUI vs UIKit', body: 'Compare SwiftUI and UIKit. When would you choose UIKit over SwiftUI in a new iOS project in 2024?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['swiftui', 'uikit', 'ios'], config: {} },
+        { type: 'SCENARIO', title: 'iOS App Architecture', body: 'Design the architecture for an iOS news app that fetches articles from a REST API, caches them for offline use, and displays them in a paginated list. What patterns and frameworks would you use?', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['ios', 'architecture', 'mvvm'], config: { rubric: [{ criterion: 'Architecture pattern (MVVM, Clean, etc.)', maxPoints: 7, guidance: '' }, { criterion: 'Networking layer with async/await or Combine', maxPoints: 6, guidance: '' }, { criterion: 'Offline caching strategy (Core Data / URLCache)', maxPoints: 6, guidance: '' }, { criterion: 'UI layer — SwiftUI or UIKit with pagination', maxPoints: 6, guidance: '' }] } },
+      ]},
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'Android / Kotlin Developer Assessment',
+    description: 'Tests Kotlin, Jetpack Compose, Android architecture components, Coroutines, and Hilt.',
+    roleType: 'android-developer', instructions: 'Answer all questions. Code should be Kotlin.',
+    timeLimit: 60, passingScore: 70, templateSlug: 'android-developer-starter',
+    sections: [
+      { title: 'Kotlin & Android', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'Coroutine Scope', body: 'Which coroutine scope should you use for operations that should survive screen rotation in an Android ViewModel?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['kotlin', 'coroutines', 'android'], config: { options: [{ label: 'GlobalScope', value: 'A' }, { label: 'lifecycleScope', value: 'B' }, { label: 'viewModelScope', value: 'C' }, { label: 'CoroutineScope(Dispatchers.IO)', value: 'D' }], correct: 'C', explanation: 'viewModelScope is tied to the ViewModel lifecycle and survives configuration changes like screen rotation.' } },
+        { type: 'SHORT_ANSWER', title: 'Jetpack Compose Recomposition', body: 'Explain what triggers recomposition in Jetpack Compose. How do you prevent unnecessary recompositions and optimise performance?', points: 15, difficulty: 'hard', evaluator: 'manual', skillTags: ['compose', 'android', 'performance'], config: {} },
+        { type: 'CODING_CHALLENGE', title: 'Flow + StateFlow', body: 'Write a Kotlin ViewModel that fetches a list of products from a repository, exposes them as a StateFlow, and handles loading/error/success states using a sealed class.', points: 20, difficulty: 'hard', evaluator: 'code', skillTags: ['kotlin', 'flow', 'viewmodel'], config: { language: 'kotlin', starterCode: 'class ProductViewModel(private val repo: ProductRepository) : ViewModel() {\n    // your code here\n}', testCases: [] } },
+      ]},
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'Vue.js Developer Assessment',
+    description: 'Tests Vue 3 Composition API, Pinia, component design, and performance.',
+    roleType: 'vue-developer', instructions: 'Answer all questions. Use Vue 3 Composition API syntax.',
+    timeLimit: 60, passingScore: 70, templateSlug: 'vue-developer-starter',
+    sections: [
+      { title: 'Vue 3 & Composition API', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'ref vs reactive', body: 'In Vue 3, when would you prefer `ref()` over `reactive()` for state?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['vue', 'composition-api', 'reactivity'], config: { options: [{ label: 'For objects and arrays only', value: 'A' }, { label: 'For primitives (strings, numbers, booleans) or when you need to reassign the whole value', value: 'B' }, { label: 'ref and reactive are identical', value: 'C' }, { label: 'For computed properties only', value: 'D' }], correct: 'B', explanation: 'ref wraps any value (especially primitives) in a reactive object accessed via .value; reactive works best for plain objects.' } },
+        { type: 'CODING_CHALLENGE', title: 'Custom Composable', body: 'Write a Vue 3 composable `useDebounce(value, delay)` that returns a debounced version of a reactive ref. It should debounce updates by `delay` ms.', points: 20, difficulty: 'hard', evaluator: 'code', skillTags: ['vue', 'composables', 'reactivity'], config: { language: 'javascript', starterCode: 'import { ref, watch } from "vue";\n\nexport function useDebounce(value, delay = 300) {\n  // your code here\n}', testCases: [] } },
+        { type: 'SHORT_ANSWER', title: 'Pinia vs Vuex', body: 'What are the main advantages of Pinia over Vuex 4 for state management in Vue 3 applications?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['vue', 'pinia', 'state-management'], config: {} },
+      ]},
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'GraphQL API Developer Assessment',
+    description: 'Tests GraphQL schema design, resolvers, mutations, subscriptions, and performance.',
+    roleType: 'graphql-developer', instructions: 'Answer all questions based on GraphQL best practices.',
+    timeLimit: 60, passingScore: 70, templateSlug: 'graphql-developer-starter',
+    sections: [
+      { title: 'GraphQL Core', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'GraphQL N+1 Problem', body: 'What is the DataLoader pattern used for in GraphQL?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['graphql', 'performance', 'dataloader'], config: { options: [{ label: 'Lazy loading schema definitions', value: 'A' }, { label: 'Batching and caching database requests to prevent N+1 queries', value: 'B' }, { label: 'Streaming large query responses', value: 'C' }, { label: 'Validating query depth limits', value: 'D' }], correct: 'B', explanation: 'DataLoader batches all individual item lookups from a tick into a single bulk request, preventing N+1.' } },
+        { type: 'SCENARIO', title: 'GraphQL Schema Design', body: 'Design a GraphQL schema for an e-commerce platform with Products, Categories, Users, and Orders. Include: types, queries, mutations, and at least one subscription. Consider pagination and filtering.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['graphql', 'schema-design', 'api'], config: { rubric: [{ criterion: 'Well-structured types with proper relationships', maxPoints: 7, guidance: '' }, { criterion: 'Queries with filtering and cursor-based pagination', maxPoints: 6, guidance: '' }, { criterion: 'Mutations with input types and error handling', maxPoints: 6, guidance: '' }, { criterion: 'Subscription for real-time order updates', maxPoints: 6, guidance: '' }] } },
+        { type: 'SHORT_ANSWER', title: 'REST vs GraphQL Tradeoffs', body: 'When would you choose GraphQL over REST? What are the main drawbacks of GraphQL and how do you mitigate them?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['graphql', 'rest', 'architecture'], config: {} },
+      ]},
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'Full Stack Developer Assessment',
+    description: 'Tests React, Node.js/Express, databases, REST API design, and deployment basics.',
+    roleType: 'fullstack-developer', instructions: 'Answer all questions. Full stack — front and back end.',
+    timeLimit: 75, passingScore: 70, templateSlug: 'fullstack-developer-starter',
+    sections: [
+      { title: 'Frontend (React)', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'React Reconciliation', body: 'What is the primary purpose of the `key` prop in React lists?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['react', 'performance', 'reconciliation'], config: { options: [{ label: 'To style list items uniquely', value: 'A' }, { label: 'To help React identify which items changed, were added, or removed', value: 'B' }, { label: 'To enable list item animations', value: 'C' }, { label: 'To sort list items automatically', value: 'D' }], correct: 'B', explanation: 'Keys help React\'s diffing algorithm identify which elements have changed for efficient re-rendering.' } },
+        { type: 'CODING_CHALLENGE', title: 'Custom React Hook', body: 'Write a custom React hook `useFetch(url)` that fetches data from a URL, handles loading and error states, and re-fetches when the URL changes.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['react', 'hooks', 'fetch'], config: { language: 'javascript', starterCode: 'import { useState, useEffect } from "react";\n\nexport function useFetch(url) {\n  // return { data, loading, error }\n}', testCases: [] } },
+      ]},
+      { title: 'Backend (Node.js & Database)', questions: [
+        { type: 'SHORT_ANSWER', title: 'JWT Authentication Flow', body: 'Describe the complete flow of JWT authentication: from user login to accessing a protected API endpoint. Include where tokens are stored and how they are validated.', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['auth', 'jwt', 'security'], config: {} },
+        { type: 'SQL_CHALLENGE', title: 'SQL Aggregation', body: 'Given tables `orders(id, user_id, created_at, total)` and `users(id, name, email)`, write a SQL query to find the top 5 users by total spend in the last 90 days, including their name and total spend.', points: 20, difficulty: 'medium', evaluator: 'sql', skillTags: ['sql', 'aggregation', 'joins'], config: { schema: 'CREATE TABLE users (id INT, name VARCHAR, email VARCHAR);\nCREATE TABLE orders (id INT, user_id INT, created_at DATE, total DECIMAL);', expectedSql: 'SELECT u.name, SUM(o.total) as total_spend FROM orders o JOIN users u ON o.user_id = u.id WHERE o.created_at >= NOW() - INTERVAL 90 DAY GROUP BY u.id, u.name ORDER BY total_spend DESC LIMIT 5' } },
+      ]},
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'Blockchain / Web3 Developer Assessment',
+    description: 'Tests Solidity, smart contracts, Ethereum, DeFi protocols, and Web3.js/ethers.js.',
+    roleType: 'blockchain-developer', instructions: 'Answer all questions. Solidity 0.8+ and Ethereum-focused.',
+    timeLimit: 60, passingScore: 70, templateSlug: 'blockchain-developer-starter',
+    sections: [
+      { title: 'Smart Contracts & Solidity', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'Reentrancy Attack', body: 'What is a reentrancy attack in Ethereum smart contracts?', points: 10, difficulty: 'hard', evaluator: 'multiple_choice', skillTags: ['solidity', 'security', 'reentrancy'], config: { options: [{ label: 'Calling the same function too many times per block', value: 'A' }, { label: 'An external contract recursively calling back into the vulnerable contract before state updates complete', value: 'B' }, { label: 'Front-running a transaction in the mempool', value: 'C' }, { label: 'Overflowing a uint256 variable', value: 'D' }], correct: 'B', explanation: 'Reentrancy exploits the fact that external calls happen before state changes, allowing recursive draining (e.g. The DAO hack).' } },
+        { type: 'CODING_CHALLENGE', title: 'ERC-20 Token', body: 'Write a minimal ERC-20 token contract in Solidity with name, symbol, totalSupply, balanceOf, transfer, and approve/transferFrom. Include a constructor that mints the initial supply to the deployer.', points: 25, difficulty: 'hard', evaluator: 'code', skillTags: ['solidity', 'erc20', 'ethereum'], config: { language: 'solidity', starterCode: '// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract MyToken {\n    // your code here\n}', testCases: [] } },
+        { type: 'SHORT_ANSWER', title: 'Gas Optimisation', body: 'List three specific Solidity patterns or techniques that reduce gas costs and explain why each one works.', points: 15, difficulty: 'hard', evaluator: 'manual', skillTags: ['solidity', 'gas', 'optimisation'], config: {} },
+      ]},
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'Database Administrator (DBA) Assessment',
+    description: 'Tests SQL, query optimisation, indexing, replication, backup strategies, and PostgreSQL/MySQL.',
+    roleType: 'database-admin', instructions: 'Answer all questions. Queries may be PostgreSQL or MySQL.',
+    timeLimit: 60, passingScore: 70, templateSlug: 'database-admin-starter',
+    sections: [
+      { title: 'SQL & Optimisation', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'Index Types', body: 'For a query that filters on a `status` column with only 3 distinct values from a 10M row table, which index would typically provide the least benefit?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['sql', 'indexing', 'performance'], config: { options: [{ label: 'B-tree index', value: 'A' }, { label: 'Partial index on status = "active"', value: 'B' }, { label: 'Composite index on (status, created_at)', value: 'C' }, { label: 'Standard B-tree index on a low-cardinality column alone', value: 'D' }], correct: 'D', explanation: 'A standard B-tree index on a low-cardinality column (3 values / 10M rows) rarely improves query plans as table scans may be faster.' } },
+        { type: 'SQL_CHALLENGE', title: 'Query Optimisation', body: 'The following query runs in 30 seconds on a 50M-row orders table. Identify the issues and rewrite it:\n\n```sql\nSELECT * FROM orders WHERE YEAR(created_at) = 2024 AND status != "cancelled";\n```', points: 20, difficulty: 'hard', evaluator: 'sql', skillTags: ['sql', 'optimisation', 'indexing'], config: { schema: 'CREATE TABLE orders (id BIGINT, created_at DATETIME, status VARCHAR(20), total DECIMAL, user_id INT);', expectedSql: 'SELECT * FROM orders WHERE created_at >= "2024-01-01" AND created_at < "2025-01-01" AND status != "cancelled";' } },
+        { type: 'SCENARIO', title: 'High Availability Strategy', body: 'Design a high-availability PostgreSQL setup for a SaaS application requiring 99.9% uptime and < 1 minute RTO. Describe replication topology, failover strategy, and backup approach.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['postgresql', 'replication', 'ha', 'backup'], config: { rubric: [{ criterion: 'Primary + standby replication setup (streaming / logical)', maxPoints: 7, guidance: '' }, { criterion: 'Automated failover tool (Patroni, repmgr, etc.)', maxPoints: 6, guidance: '' }, { criterion: 'Backup strategy (pg_dump, WAL archiving, PITR)', maxPoints: 6, guidance: '' }, { criterion: 'Connection pooling and load balancing (PgBouncer)', maxPoints: 6, guidance: '' }] } },
+      ]},
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'React Native / Mobile Developer Assessment',
+    description: 'Tests React Native, cross-platform mobile development, navigation, and native modules.',
+    roleType: 'react-native-developer', instructions: 'Answer all questions. React Native + Expo or bare workflow.',
+    timeLimit: 60, passingScore: 70, templateSlug: 'react-native-developer-starter',
+    sections: [
+      { title: 'React Native Core', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'React Native Bridge', body: 'In React Native, what is the purpose of the JavaScript Bridge (or the new Architecture\'s JSI)?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['react-native', 'architecture', 'bridge'], config: { options: [{ label: 'It converts JSX to native XML', value: 'A' }, { label: 'It enables communication between the JavaScript thread and the native UI thread', value: 'B' }, { label: 'It bundles JavaScript code for production', value: 'C' }, { label: 'It handles HTTP requests natively', value: 'D' }], correct: 'B', explanation: 'The Bridge (and JSI in the new architecture) enables async communication between JS and native code.' } },
+        { type: 'SHORT_ANSWER', title: 'Performance Optimisation', body: 'List three common performance issues in React Native apps and how you would fix each one.', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['react-native', 'performance'], config: {} },
+        { type: 'CODING_CHALLENGE', title: 'FlatList Optimisation', body: 'You have a FlatList displaying 10,000 items that is sluggish. Write an optimised FlatList implementation with proper key extraction, item layout, and memoisation to improve scroll performance.', points: 20, difficulty: 'hard', evaluator: 'code', skillTags: ['react-native', 'flatlist', 'performance'], config: { language: 'javascript', starterCode: 'import React, { memo } from "react";\nimport { FlatList, Text, View } from "react-native";\n\nconst ITEM_HEIGHT = 60;\n\n// Optimise this component\nexport function ProductList({ products }) {\n  return (\n    <FlatList\n      data={products}\n      renderItem={({ item }) => <View><Text>{item.name}</Text></View>}\n    />\n  );\n}', testCases: [] } },
+      ]},
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'Business Analyst (Technical) Assessment',
+    description: 'Tests requirements gathering, process modelling, SQL for data analysis, and stakeholder communication.',
+    roleType: 'business-analyst', instructions: 'Answer all questions based on your BA experience.',
+    timeLimit: 60, passingScore: 70, templateSlug: 'business-analyst-starter',
+    sections: [
+      { title: 'Requirements & Analysis', questions: [
+        { type: 'MULTIPLE_CHOICE', title: 'User Story Format', body: 'Which of the following best describes the correct format of a User Story?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['agile', 'user-stories', 'requirements'], config: { options: [{ label: 'The system shall allow users to log in with email and password', value: 'A' }, { label: 'As a registered user, I want to reset my password so that I can regain access to my account', value: 'B' }, { label: 'Login functionality for all users', value: 'C' }, { label: 'Implement OAuth2 login with Google and Facebook', value: 'D' }], correct: 'B', explanation: 'The standard User Story format is: As a [role], I want [goal] so that [benefit].' } },
+        { type: 'SCENARIO', title: 'Requirements Gathering', body: 'You are the BA for a new expense management system. A stakeholder meeting reveals conflicting priorities between Finance (wants approval workflows) and HR (wants mobile-first). Describe how you would facilitate alignment, document requirements, and handle conflicts.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['requirements', 'stakeholder-management', 'ba'], config: { rubric: [{ criterion: 'Stakeholder identification and engagement approach', maxPoints: 7, guidance: '' }, { criterion: 'Requirements elicitation techniques', maxPoints: 6, guidance: '' }, { criterion: 'Conflict resolution strategy', maxPoints: 6, guidance: '' }, { criterion: 'Documentation approach (BRD, user stories, acceptance criteria)', maxPoints: 6, guidance: '' }] } },
+        { type: 'SQL_CHALLENGE', title: 'Data Analysis with SQL', body: 'Using the tables `sales(id, product_id, region, amount, sale_date)` and `products(id, name, category)`, write a query to show the month-over-month revenue growth percentage for each product category in 2024.', points: 20, difficulty: 'hard', evaluator: 'sql', skillTags: ['sql', 'data-analysis', 'business-intelligence'], config: { schema: 'CREATE TABLE products (id INT, name VARCHAR, category VARCHAR);\nCREATE TABLE sales (id INT, product_id INT, region VARCHAR, amount DECIMAL, sale_date DATE);', expectedSql: 'WITH monthly AS (SELECT DATE_FORMAT(sale_date, "%Y-%m") as month, p.category, SUM(amount) as revenue FROM sales s JOIN products p ON s.product_id = p.id WHERE YEAR(sale_date) = 2024 GROUP BY month, p.category) SELECT category, month, revenue, LAG(revenue) OVER (PARTITION BY category ORDER BY month) as prev_revenue, ROUND((revenue - LAG(revenue) OVER (PARTITION BY category ORDER BY month)) / LAG(revenue) OVER (PARTITION BY category ORDER BY month) * 100, 1) as growth_pct FROM monthly' } },
+      ]},
+    ],
+  });
+
   console.log('✅ Seeding complete!');
   console.log('');
   console.log('── Demo Login Credentials ─────────────────────────────────');
   console.log('  Admin:     admin@screenstack.io     / admin123');
   console.log('  Recruiter: recruiter@screenstack.io / recruiter123');
   console.log('───────────────────────────────────────────────────────────');
-  console.log('  20 starter assessment templates created.');
+  console.log('  32 starter assessment templates created.');
   console.log('  Start the app: npm run dev → http://localhost:3000');
 }
 

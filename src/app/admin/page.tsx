@@ -87,30 +87,47 @@ export default async function AdminDashboard() {
             <h3 className="font-semibold text-gray-900">Recent Completions</h3>
           </div>
           <div className="divide-y divide-gray-100">
-            {stats.recent.map((attempt) => (
-              <div key={attempt.id} className="px-6 py-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{attempt.candidate.name}</p>
-                  <p className="text-xs text-gray-500">{attempt.assessment.title}</p>
+            {stats.recent.map((attempt) => {
+              const flagged = attempt.suspicionScore >= 50;
+              return (
+                <div
+                  key={attempt.id}
+                  className={`px-6 py-4 flex items-center justify-between ${
+                    flagged ? 'bg-red-50 border-l-4 border-red-400' : ''
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className={`text-sm font-medium ${flagged ? 'text-red-700' : 'text-gray-900'}`}>
+                        {attempt.candidate.name}
+                      </p>
+                      {flagged && (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                          ⚠ Integrity Risk ({Math.round(attempt.suspicionScore)})
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">{attempt.assessment.title}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {attempt.score !== null && attempt.maxScore !== null && (
+                      <span className={`badge ${
+                        attempt.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {Math.round(((attempt.score ?? 0) / (attempt.maxScore ?? 1)) * 100)}%
+                        {attempt.passed ? ' · Pass' : ' · Fail'}
+                      </span>
+                    )}
+                    <Link
+                      href={`/admin/reports/${attempt.id}`}
+                      className="text-xs text-brand-600 hover:underline"
+                    >
+                      View report →
+                    </Link>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {attempt.score !== null && attempt.maxScore !== null && (
-                    <span className={`badge ${
-                      attempt.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                      {Math.round(((attempt.score ?? 0) / (attempt.maxScore ?? 1)) * 100)}%
-                      {attempt.passed ? ' · Pass' : ' · Fail'}
-                    </span>
-                  )}
-                  <Link
-                    href={`/admin/reports/${attempt.id}`}
-                    className="text-xs text-brand-600 hover:underline"
-                  >
-                    View report →
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
