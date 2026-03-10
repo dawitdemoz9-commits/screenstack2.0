@@ -77,11 +77,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-            <p className="font-medium text-gray-700 mb-1">Demo credentials</p>
-            <p>Admin: <code className="text-brand-600">admin@skillio.io</code> / <code className="text-brand-600">admin123</code></p>
-            <p>Recruiter: <code className="text-brand-600">recruiter@skillio.io</code> / <code className="text-brand-600">recruiter123</code></p>
-          </div>
         </div>
       </div>
     </div>
