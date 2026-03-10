@@ -1,0 +1,65 @@
+version: '3.9'
+
+services:
+
+  # ─── PostgreSQL Database ──────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: screenstack-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     screenstack
+      POSTGRES_PASSWORD: screenstack
+      POSTGRES_DB:       screenstack
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U screenstack']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── MinIO (S3-compatible local storage for file uploads) ─────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: screenstack-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER:     minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - '9000:9000'   # S3 API
+      - '9001:9001'   # Web console
+    volumes:
+      - minio_data:/data
+
+  # ─── Next.js Application ──────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: screenstack-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://screenstack:screenstack@postgres:5432/screenstack
+      JWT_SECRET:   change-this-secret-in-production
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      STORAGE_ENDPOINT:    http://minio:9000
+      STORAGE_ACCESS_KEY:  minioadmin
+      STORAGE_SECRET_KEY:  minioadmin
+      STORAGE_BUCKET:      screenstack
+      CODE_EXECUTION_MOCK: "true"
+      EMAIL_MOCK:          "true"
+      NODE_ENV:            production
+    ports:
+      - '3000:3000'
+
+volumes:
+  postgres_data:
+  minio_data:

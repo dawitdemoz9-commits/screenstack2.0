@@ -1,0 +1,387 @@
+// ─── ScreenStack — Prisma Schema ─────────────────────────────────────────────
+// This file defines every database table used by the application.
+// Run `npx prisma db push` to apply changes to the local database.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USERS & ROLES
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         UserRole  @default(RECRUITER)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  assessments Assessment[]
+  invites     Invite[]
+  auditLogs   AuditLog[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  RECRUITER
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ASSESSMENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Assessment {
+  id           String  @id @default(cuid())
+  title        String
+  description  String?
+  roleType     String  // e.g. "react-developer", "data-analyst"
+  instructions String? // Shown to candidate before starting
+  timeLimit    Int     @default(60) // total minutes
+  passingScore Int     @default(70) // percentage required to pass
+
+  // Monitoring settings
+  monitoringEnabled Boolean @default(false)
+  requireCamera     Boolean @default(false)
+  requireMicrophone Boolean @default(false)
+  requireScreen     Boolean @default(false)
+
+  // Scoring config (JSON — allows custom rules per assessment)
+  scoringConfig Json @default("{}")
+
+  isActive     Boolean  @default(true)
+  isTemplate   Boolean  @default(false)
+  templateSlug String?  @unique // e.g. "react-developer-starter"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String
+
+  sections AssessmentSection[]
+  invites  Invite[]
+  attempts Attempt[]
+
+  @@map("assessments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTIONS & QUESTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AssessmentSection {
+  id           String  @id @default(cuid())
+  title        String
+  description  String?
+  orderIndex   Int     @default(0)
+  timeLimitMin Int?    // optional per-section time override
+
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  assessmentId String
+
+  questions Question[]
+
+  @@map("assessment_sections")
+}
+
+model Question {
+  id          String       @id @default(cuid())
+  type        QuestionType
+  title       String
+  body        String       // Markdown supported
+  orderIndex  Int          @default(0)
+  points      Int          @default(10)
+  timeLimitSec Int?        // per-question timer in seconds (null = no limit)
+
+  // Pluggable evaluator (determines how the answer is scored)
+  // Values: "multiple_choice" | "multi_select" | "code" | "sql" | "manual" | "scenario"
+  evaluator   String       @default("manual")
+
+  // Type-specific config stored as JSON
+  // For multiple_choice: { options: [...], correct: "A" }
+  // For code: { language: "python", starterCode: "...", testCases: [...] }
+  // For sql: { schema: "...", expectedResult: [...] }
+  // For scenario: { rubric: [...] }
+  config      Json         @default("{}")
+
+  // Custom scoring rules (JSON) — overrides evaluator defaults
+  scoringRules Json @default("{}")
+
+  // Reference data
+  difficulty String  @default("medium") // easy | medium | hard
+  skillTags  String[] // e.g. ["hooks", "react", "performance"]
+  platform   String?  // e.g. "salesforce", "servicenow"
+
+  section    AssessmentSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  sectionId  String
+
+  responses Response[]
+  snapshots CodeSnapshot[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("questions")
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  MULTI_SELECT
+  SHORT_ANSWER
+  LONG_ANSWER
+  CODING_CHALLENGE
+  SQL_CHALLENGE
+  DEBUGGING_CHALLENGE
+  FILE_UPLOAD
+  SCENARIO
+  ARCHITECTURE
+  ENTERPRISE_SCENARIO
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CANDIDATES & INVITES
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Candidate {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  phone     String?
+  company   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invites  Invite[]
+  attempts Attempt[]
+
+  @@map("candidates")
+}
+
+model Invite {
+  id    String       @id @default(cuid())
+  token String       @unique @default(cuid())
+  status InviteStatus @default(PENDING)
+
+  // Short-lived signed token for candidate access
+  accessToken String?
+  expiresAt   DateTime
+
+  // Optional message to candidate
+  message String?
+
+  // Tracking
+  sentAt     DateTime?
+  openedAt   DateTime?
+  usedAt     DateTime?
+
+  candidate    Candidate  @relation(fields: [candidateId], references: [id])
+  candidateId  String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  assessmentId String
+  createdBy    User       @relation(fields: [createdById], references: [id])
+  createdById  String
+
+  attempt Attempt?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("invites")
+}
+
+enum InviteStatus {
+  PENDING
+  SENT
+  OPENED
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ATTEMPTS (a candidate sitting an assessment)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Attempt {
+  id     String        @id @default(cuid())
+  status AttemptStatus @default(PENDING)
+
+  // Identity step
+  identityVerifiedAt DateTime?
+  identityData       Json? // { name, email, consent timestamp }
+
+  // Consent step
+  consentGivenAt DateTime?
+  consentVersion String?
+
+  // Permission state
+  cameraGranted  Boolean?
+  micGranted     Boolean?
+  screenGranted  Boolean?
+
+  // Timing
+  startedAt   DateTime?
+  completedAt DateTime?
+  timeElapsed Int? // seconds used
+
+  // Scoring
+  score          Float?
+  maxScore       Float?
+  passed         Boolean?
+  sectionScores  Json? // { sectionId: { score, maxScore } }
+
+  // Recruiter review
+  recruiterNotes String?
+  recommendation String? // "strong_hire" | "hire" | "maybe" | "no_hire"
+  reviewedAt     DateTime?
+
+  // Integrity / anti-cheat
+  suspicionScore    Float   @default(0) // 0–100 scale
+  flaggedEventCount Int     @default(0)
+
+  // Current question tracking (for resume / autosave)
+  currentQuestionId String?
+  lastActivityAt    DateTime?
+
+  candidate    Candidate  @relation(fields: [candidateId], references: [id])
+  candidateId  String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  assessmentId String
+  invite       Invite     @relation(fields: [inviteId], references: [id])
+  inviteId     String     @unique
+
+  responses        Response[]
+  monitoringEvents MonitoringEvent[]
+  snapshots        CodeSnapshot[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("attempts")
+}
+
+enum AttemptStatus {
+  PENDING           // invite clicked, not started
+  IDENTITY_VERIFIED // name/email confirmed
+  CONSENT_GIVEN     // monitoring consent agreed to
+  IN_PROGRESS       // actively taking test
+  COMPLETED         // submitted
+  ABANDONED         // timed out or left
+  FLAGGED           // high suspicion score
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESPONSES
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Response {
+  id String @id @default(cuid())
+
+  // Flexible answer storage
+  // For MC: { selected: "A" }
+  // For code: { code: "...", language: "python" }
+  // For SQL: { query: "SELECT ..." }
+  // For short/long: { text: "..." }
+  answer Json
+
+  // Scoring
+  isCorrect   Boolean?
+  score       Float?
+  maxScore    Float    @default(0)
+  feedback    String?  // Auto or recruiter feedback
+  isManualScore Boolean @default(false)
+  scoredAt    DateTime?
+
+  attempt    Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  attemptId  String
+  question   Question @relation(fields: [questionId], references: [id])
+  questionId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([attemptId, questionId])
+  @@map("responses")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CODE SNAPSHOTS (autosave for code/SQL editors)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CodeSnapshot {
+  id         String   @id @default(cuid())
+  code       String
+  language   String
+  savedAt    DateTime @default(now())
+
+  attempt    Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  attemptId  String
+  question   Question @relation(fields: [questionId], references: [id])
+  questionId String
+
+  @@map("code_snapshots")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MONITORING EVENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model MonitoringEvent {
+  id        String        @id @default(cuid())
+  eventType String        // page_hidden, window_blur, copy, paste, etc.
+  severity  EventSeverity @default(LOW)
+  metadata  Json?         // additional context (e.g. paste length)
+  timestamp DateTime      @default(now())
+
+  // Suspicion contribution (configurable per event type)
+  suspicionDelta Float @default(0)
+
+  attempt   Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  attemptId String
+
+  @@index([attemptId, timestamp])
+  @@map("monitoring_events")
+}
+
+enum EventSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIT LOG (append-only security log)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String   // e.g. "invite.created", "attempt.completed"
+  resource   String   // e.g. "invite", "attempt"
+  resourceId String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
+  @@index([resource, resourceId])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
