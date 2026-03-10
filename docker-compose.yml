@@ -5,18 +5,18 @@ services:
   # ─── PostgreSQL Database ──────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
-    container_name: screenstack-db
+    container_name: skillio-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER:     screenstack
-      POSTGRES_PASSWORD: screenstack
-      POSTGRES_DB:       screenstack
+      POSTGRES_USER:     Skillio
+      POSTGRES_PASSWORD: Skillio
+      POSTGRES_DB:       Skillio
     ports:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U screenstack']
+      test: ['CMD-SHELL', 'pg_isready -U Skillio']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,7 +24,7 @@ services:
   # ─── MinIO (S3-compatible local storage for file uploads) ─────────────────
   minio:
     image: minio/minio:latest
-    container_name: screenstack-minio
+    container_name: skillio-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -41,19 +41,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: screenstack-app
+    container_name: skillio-app
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://screenstack:screenstack@postgres:5432/screenstack
+      DATABASE_URL: postgresql://Skillio:Skillio@postgres:5432/Skillio
       JWT_SECRET:   change-this-secret-in-production
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       STORAGE_ENDPOINT:    http://minio:9000
       STORAGE_ACCESS_KEY:  minioadmin
       STORAGE_SECRET_KEY:  minioadmin
-      STORAGE_BUCKET:      screenstack
+      STORAGE_BUCKET:      skillio
       CODE_EXECUTION_MOCK: "true"
       EMAIL_MOCK:          "true"
       NODE_ENV:            production

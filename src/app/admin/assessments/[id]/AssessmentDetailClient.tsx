@@ -5,6 +5,7 @@ import { useState, useCallback, useEffect } from 'react';
 interface Question {
   id: string; type: string; title: string; body: string;
   points: number; difficulty: string; evaluator: string; skillTags: string[];
+  config: Record<string, unknown>;
 }
 interface Section {
   id: string; title: string; description?: string;
@@ -31,6 +32,62 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   medium: 'bg-yellow-100 text-yellow-700',
   hard:   'bg-red-100 text-red-700',
 };
+
+const DIFFICULTY_CONFIG: Record<string, { label: string; bar: string; rank: string; rankLabel: string }> = {
+  easy:   { label: 'Easy',   bar: 'bg-green-400',  rank: '●',   rankLabel: 'Foundational' },
+  medium: { label: 'Medium', bar: 'bg-yellow-400', rank: '●●',  rankLabel: 'Professional' },
+  hard:   { label: 'Hard',   bar: 'bg-red-400',    rank: '●●●', rankLabel: 'Advanced'     },
+};
+
+function DifficultyStatsBar({ sections }: { sections: Section[] }) {
+  const allQ = sections.flatMap((s) => s.questions);
+  const total = allQ.length;
+  if (total === 0) return null;
+
+  const counts: Record<string, number> = { easy: 0, medium: 0, hard: 0 };
+  const pts:    Record<string, number> = { easy: 0, medium: 0, hard: 0 };
+  for (const q of allQ) {
+    const d = q.difficulty?.toLowerCase() || 'medium';
+    counts[d] = (counts[d] || 0) + 1;
+    pts[d]    = (pts[d]    || 0) + q.points;
+  }
+
+  const codingTypes = new Set(['CODING_CHALLENGE','SQL_CHALLENGE','DEBUGGING_CHALLENGE']);
+  const codingCount = allQ.filter((q) => codingTypes.has(q.type)).length;
+
+  return (
+    <div className="card p-5 mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-gray-700">Question Difficulty Breakdown</h3>
+        <span className="text-xs text-gray-400">{total} questions · {codingCount} coding</span>
+      </div>
+
+      {/* Visual bar */}
+      <div className="flex h-2.5 rounded-full overflow-hidden mb-4 gap-0.5">
+        {(['easy','medium','hard'] as const).map((d) => {
+          const pct = total > 0 ? (counts[d] / total) * 100 : 0;
+          return pct > 0 ? (
+            <div key={d} className={`${DIFFICULTY_CONFIG[d].bar} transition-all`} style={{ width: `${pct}%` }} title={`${d}: ${counts[d]}`} />
+          ) : null;
+        })}
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-3">
+        {(['easy','medium','hard'] as const).map((d) => (
+          <div key={d} className={`rounded-lg p-3 ${DIFFICULTY_COLORS[d]} bg-opacity-60`}>
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-xs font-bold tracking-wide uppercase">{DIFFICULTY_CONFIG[d].label}</span>
+              <span className="text-xs opacity-70">{DIFFICULTY_CONFIG[d].rank}</span>
+            </div>
+            <div className="text-lg font-bold">{counts[d]}</div>
+            <div className="text-xs opacity-75">{pts[d]} pts · {DIFFICULTY_CONFIG[d].rankLabel}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function AssessmentDetailClient({
   assessment,
@@ -63,6 +120,7 @@ export default function AssessmentDetailClient({
 
   return (
     <div className="space-y-4">
+      <DifficultyStatsBar sections={sections} />
       {/* Sections */}
       {sections.map((section) => (
         <div key={section.id} className="card">
@@ -95,27 +153,18 @@ export default function AssessmentDetailClient({
               ) : (
                 <div className="divide-y divide-gray-100">
                   {section.questions.map((q, qi) => (
-                    <div key={q.id} className="px-6 py-4 flex items-start gap-4">
-                      <span className="text-sm font-medium text-gray-400 w-6 mt-0.5">{qi + 1}</span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="badge bg-gray-100 text-gray-600 text-xs">
-                            {QUESTION_TYPE_LABELS[q.type] || q.type}
-                          </span>
-                          <span className={`badge text-xs ${DIFFICULTY_COLORS[q.difficulty] || ''}`}>
-                            {q.difficulty}
-                          </span>
-                          {q.skillTags.slice(0, 3).map((tag) => (
-                            <span key={tag} className="badge bg-brand-50 text-brand-700 text-xs">{tag}</span>
-                          ))}
-                        </div>
-                        <p className="text-sm font-medium text-gray-900">{q.title}</p>
-                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{q.body}</p>
-                      </div>
-                      <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                        {q.points} pts
-                      </span>
-                    </div>
+                    <QuestionRow
+                      key={q.id}
+                      q={q}
+                      qi={qi}
+                      onConfigSaved={(updated) => {
+                        setSections(prev => prev.map(s =>
+                          s.id === section.id
+                            ? { ...s, questions: s.questions.map(sq => sq.id === q.id ? { ...sq, config: updated } : sq) }
+                            : s
+                        ));
+                      }}
+                    />
                   ))}
                 </div>
               )}
@@ -158,6 +207,130 @@ export default function AssessmentDetailClient({
 
       <div className="text-sm text-gray-500 text-right">
         Total: <strong className="text-gray-900">{totalPoints} points</strong> across {sections.length} sections
+      </div>
+    </div>
+  );
+}
+
+// ─── Question row ─────────────────────────────────────────────────────────────
+
+function QuestionRow({ q, qi, onConfigSaved }: {
+  q: Question;
+  qi: number;
+  onConfigSaved: (config: Record<string, unknown>) => void;
+}) {
+  const [editingConfig, setEditingConfig] = useState(false);
+  const isMC = ['MULTIPLE_CHOICE', 'MULTI_SELECT'].includes(q.type);
+  const hasOptions = isMC && Array.isArray((q.config as Record<string, unknown>)?.options) &&
+    ((q.config as Record<string, unknown>).options as unknown[]).length > 0;
+
+  return (
+    <div className="px-6 py-4">
+      <div className="flex items-start gap-4">
+        <span className="text-sm font-medium text-gray-400 w-6 mt-0.5">{qi + 1}</span>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="badge bg-gray-100 text-gray-600 text-xs">
+              {QUESTION_TYPE_LABELS[q.type] || q.type}
+            </span>
+            <span className={`badge text-xs font-semibold ${DIFFICULTY_COLORS[q.difficulty] || ''}`}>
+              {DIFFICULTY_CONFIG[q.difficulty]?.rank || '●'} {q.difficulty}
+            </span>
+            {q.skillTags.slice(0, 3).map((tag) => (
+              <span key={tag} className="badge bg-brand-50 text-brand-700 text-xs">{tag}</span>
+            ))}
+          </div>
+          <p className="text-sm font-medium text-gray-900">{q.title}</p>
+          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{q.body}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          {isMC && (
+            <button
+              onClick={() => setEditingConfig(!editingConfig)}
+              className={`text-xs px-2 py-1 rounded border ${hasOptions
+                ? 'border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300'
+                : 'border-amber-300 text-amber-600 hover:border-amber-400 bg-amber-50'}`}
+              title={hasOptions ? 'Edit options' : 'Options missing — click to add'}
+            >
+              {hasOptions ? 'Edit options' : '⚠ Add options'}
+            </button>
+          )}
+          <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+            {q.points} pts
+          </span>
+        </div>
+      </div>
+      {editingConfig && (
+        <div className="mt-3 ml-10">
+          <EditConfigInline
+            question={q}
+            onSaved={(updated) => { onConfigSaved(updated); setEditingConfig(false); }}
+            onClose={() => setEditingConfig(false)}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Edit config inline ───────────────────────────────────────────────────────
+
+function EditConfigInline({ question, onSaved, onClose }: {
+  question: Question;
+  onSaved: (config: Record<string, unknown>) => void;
+  onClose: () => void;
+}) {
+  const hasOptions = Array.isArray((question.config as Record<string, unknown>)?.options) &&
+    ((question.config as Record<string, unknown>).options as unknown[]).length > 0;
+
+  const placeholder = question.type === 'MULTIPLE_CHOICE'
+    ? JSON.stringify({ options: [{ label: 'Option A', value: 'A' }, { label: 'Option B', value: 'B' }, { label: 'Option C', value: 'C' }, { label: 'Option D', value: 'D' }], correct: 'A', explanation: '' }, null, 2)
+    : JSON.stringify({ options: [{ label: 'Option A', value: 'A' }, { label: 'Option B', value: 'B' }], correct: ['A'], explanation: '' }, null, 2);
+
+  const [configJson, setConfigJson] = useState(hasOptions ? JSON.stringify(question.config, null, 2) : placeholder);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  async function save() {
+    let parsed: Record<string, unknown>;
+    try { parsed = JSON.parse(configJson); } catch { setError('Invalid JSON'); return; }
+    setSaving(true); setError('');
+    const res = await fetch(`/api/admin/questions/${question.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config: parsed }),
+    });
+    if (res.ok) {
+      onSaved(parsed);
+    } else {
+      setError('Failed to save');
+    }
+    setSaving(false);
+  }
+
+  return (
+    <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-gray-700">
+          Edit answer options{' '}
+          <span className="text-gray-400 font-normal">
+            {question.type === 'MULTIPLE_CHOICE' ? '— { options: [{label, value}], correct: "value" }' : '— { options: [{label, value}], correct: ["v1","v2"] }'}
+          </span>
+        </p>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-sm">✕</button>
+      </div>
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      <textarea
+        className="input text-xs font-mono w-full"
+        rows={10}
+        value={configJson}
+        onChange={(e) => setConfigJson(e.target.value)}
+      />
+      <div className="flex gap-2">
+        <button className="btn-primary text-sm" onClick={save} disabled={saving}>
+          {saving ? 'Saving…' : 'Save Options'}
+        </button>
+        <button className="btn-secondary text-sm" onClick={onClose}>Cancel</button>
       </div>
     </div>
   );
@@ -313,6 +486,7 @@ function AddQuestionInline({
 interface BankQuestion {
   id: string; type: string; title: string; body: string; points: number;
   difficulty: string; evaluator: string; skillTags: string[];
+  config: Record<string, unknown>;
   section: { assessment: { title: string; roleType: string } };
 }
 
@@ -344,34 +518,43 @@ function QuestionBankPicker({ sectionId, questionCount, onAdded, onClose }: {
 
   async function importSelected() {
     setImporting(true);
-    const toImport = questions.filter((q) => selected.has(q.id));
-    let lastAdded: Question | null = null;
-    for (let i = 0; i < toImport.length; i++) {
-      const q = toImport[i];
-      const res = await fetch('/api/admin/questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sectionId,
-          type: q.type,
-          title: q.title,
-          body: q.body,
-          points: q.points,
-          difficulty: q.difficulty,
-          evaluator: q.evaluator,
-          skillTags: q.skillTags,
-          orderIndex: questionCount + i,
-          config: {},
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        lastAdded = data.question;
-        onAdded(data.question);
+    try {
+      const toImport = questions.filter((q) => selected.has(q.id));
+      let lastAdded: Question | null = null;
+      for (let i = 0; i < toImport.length; i++) {
+        const q = toImport[i];
+        const res = await fetch('/api/admin/questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sectionId,
+            type: q.type,
+            title: q.title,
+            body: q.body,
+            points: q.points,
+            difficulty: q.difficulty,
+            evaluator: q.evaluator,
+            skillTags: q.skillTags,
+            orderIndex: questionCount + i,
+            config: q.config ?? {},
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          lastAdded = data.question;
+          onAdded(data.question);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          alert(`Failed to import "${q.title}": ${data.error || res.statusText}`);
+          break;
+        }
       }
+      if (lastAdded) onClose();
+    } catch {
+      alert('Network error while importing questions. Please try again.');
+    } finally {
+      setImporting(false);
     }
-    setImporting(false);
-    if (lastAdded) onClose();
   }
 
   return (

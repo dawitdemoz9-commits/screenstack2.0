@@ -131,7 +131,8 @@ export async function POST(
     }
 
     const totalScore = attempt.responses.reduce((s, r) => s + (r.score ?? 0), 0);
-    const maxScore   = attempt.responses.reduce((s, r) => s + r.maxScore, 0);
+    // Use ALL questions (not just answered ones) so skipped questions count as 0
+    const maxScore   = attempt.assessment.sections.flatMap(s => s.questions).reduce((s, q) => s + q.points, 0);
     const pct        = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
 
     // Compute per-section scores
@@ -161,7 +162,7 @@ export async function POST(
         timeElapsed,
         score:         totalScore,
         maxScore,
-        passed:        pct >= 70,
+        passed:        pct >= (attempt.assessment.passingScore ?? 70),
         sectionScores: sectionScores as never,
       },
     });
@@ -191,7 +192,7 @@ export async function POST(
           type: 'attempt_completed',
           title: 'Assessment Completed',
           body: `${candidate?.name ?? 'A candidate'} has completed "${assessment?.title ?? 'an assessment'}" with a score of ${Math.round(pct)}%`,
-          metadata: { attemptId, candidateName: candidate?.name, assessmentTitle: assessment?.title, score: Math.round(pct), passed: pct >= 70 },
+          metadata: { attemptId, candidateName: candidate?.name, assessmentTitle: assessment?.title, score: Math.round(pct), passed: pct >= (attempt.assessment.passingScore ?? 70) },
         });
       }
     } catch { /* notification failure must not break submission */ }

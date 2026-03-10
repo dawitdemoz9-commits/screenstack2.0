@@ -89,7 +89,7 @@ export default function AdminLayout({ children, user }: Props) {
                   d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <span className="font-bold text-gray-900 text-lg">ScreenStack</span>
+            <span className="font-bold text-gray-900 text-lg">Skillio</span>
           </div>
           <NotificationBell />
           </div>

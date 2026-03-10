@@ -1,4 +1,4 @@
-// ─── ScreenStack — Shared Types ───────────────────────────────────────────────
+// ─── Skillio — Shared Types ───────────────────────────────────────────────────
 
 export type UserRole = 'ADMIN' | 'RECRUITER';
 

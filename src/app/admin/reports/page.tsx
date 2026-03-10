@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import Link from 'next/link';
 import { getSuspicionLevel } from '@/lib/monitoring';
 import { getScoreBand, SCORE_BAND_LABELS } from '@/types';
+import ReportsFilter from './ReportsFilter';
 
 export default async function ReportsPage({
   searchParams,
@@ -43,38 +44,7 @@ export default async function ReportsPage({
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 mb-6 flex-wrap">
-        <form className="flex gap-3 flex-wrap">
-          <select
-            name="role"
-            defaultValue={roleFilter}
-            className="input w-auto text-sm"
-            onChange={(e) => {
-              const url = new URL(window.location.href);
-              url.searchParams.set('role', e.target.value);
-              window.location.href = url.toString();
-            }}
-          >
-            <option value="">All Roles</option>
-            {roles.map((r) => (
-              <option key={r.roleType} value={r.roleType}>
-                {r.roleType.replace(/-/g, ' ')}
-              </option>
-            ))}
-          </select>
-        </form>
-        <div className="flex gap-2">
-          {['', 'COMPLETED', 'FLAGGED'].map((s) => (
-            <Link
-              key={s}
-              href={`/admin/reports?status=${s}&role=${roleFilter}`}
-              className={`btn-${statusFilter === s ? 'primary' : 'secondary'} text-sm`}
-            >
-              {s === '' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
-            </Link>
-          ))}
-        </div>
-      </div>
+      <ReportsFilter roles={roles} roleFilter={roleFilter} statusFilter={statusFilter} />
 
       {/* Table */}
       <div className="card overflow-hidden">

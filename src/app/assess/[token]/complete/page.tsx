@@ -20,7 +20,7 @@ export default async function CompletePage({
           There is nothing more you need to do.
         </p>
         <div className="p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-          <p>Powered by <strong>ScreenStack</strong></p>
+          <p>Powered by <strong>Skillio</strong></p>
         </div>
       </div>
     </div>

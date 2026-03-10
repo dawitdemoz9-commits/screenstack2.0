@@ -42,7 +42,7 @@ export default function LoginPage() {
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">ScreenStack</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Skillio</h1>
           <p className="text-gray-500 text-sm mt-1">Technical Assessment Platform</p>
         </div>
 
@@ -79,8 +79,8 @@ export default function LoginPage() {
 
           <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
             <p className="font-medium text-gray-700 mb-1">Demo credentials</p>
-            <p>Admin: <code className="text-brand-600">admin@screenstack.io</code> / <code className="text-brand-600">admin123</code></p>
-            <p>Recruiter: <code className="text-brand-600">recruiter@screenstack.io</code> / <code className="text-brand-600">recruiter123</code></p>
+            <p>Admin: <code className="text-brand-600">admin@skillio.io</code> / <code className="text-brand-600">admin123</code></p>
+            <p>Recruiter: <code className="text-brand-600">recruiter@skillio.io</code> / <code className="text-brand-600">recruiter123</code></p>
           </div>
         </div>
       </div>

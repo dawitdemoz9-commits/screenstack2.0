@@ -26,10 +26,11 @@ export async function POST(req: NextRequest) {
     // Validate access token against attempt
     const attempt = await prisma.attempt.findUnique({
       where: { id: body.attemptId },
-      select: { inviteId: true, status: true },
+      select: { inviteId: true, status: true, suspicionScore: true },
     });
 
     if (!attempt) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const scoreBeforeEvent = attempt.suspicionScore ?? 0;
     if (attempt.status === 'COMPLETED') {
       // Still log but don't error — late events can arrive after submit
     }
@@ -53,8 +54,8 @@ export async function POST(req: NextRequest) {
         select: { suspicionScore: true, flaggedEventCount: true, candidateId: true, assessmentId: true, inviteId: true },
       });
       const THRESHOLD = 50;
-      if (updatedAttempt && updatedAttempt.suspicionScore >= THRESHOLD && updatedAttempt.flaggedEventCount === 1) {
-        // flaggedEventCount===1 means this is the first flagged event, so we notify once
+      // Fire once: when this event pushed the score from below the threshold to at/above it
+      if (updatedAttempt && scoreBeforeEvent < THRESHOLD && updatedAttempt.suspicionScore >= THRESHOLD) {
         const invite = await prisma.invite.findUnique({ where: { id: updatedAttempt.inviteId }, select: { createdById: true } });
         if (invite) {
           const candidate = await prisma.candidate.findUnique({ where: { id: updatedAttempt.candidateId }, select: { name: true } });

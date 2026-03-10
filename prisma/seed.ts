@@ -1,5 +1,5 @@
 /**
- * ScreenStack — Database Seed
+ * Skillio — Database Seed
  *
  * Creates:
  *  - 2 admin/recruiter users
@@ -93,7 +93,7 @@ async function createAssessment(
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log('🌱 Seeding ScreenStack database…');
+  console.log('🌱 Seeding Skillio database…');
 
   // ── Users ──────────────────────────────────────────────────────────────────
 
@@ -101,10 +101,10 @@ async function main() {
   const recruiterHash = await bcrypt.hash('recruiter123', 12);
 
   const admin = await prisma.user.upsert({
-    where:  { email: 'admin@screenstack.io' },
+    where:  { email: 'admin@skillio.io' },
     update: {},
     create: {
-      email:        'admin@screenstack.io',
+      email:        'admin@skillio.io',
       name:         'Alex Admin',
       passwordHash: adminHash,
       role:         'ADMIN',
@@ -112,10 +112,10 @@ async function main() {
   });
 
   await prisma.user.upsert({
-    where:  { email: 'recruiter@screenstack.io' },
+    where:  { email: 'recruiter@skillio.io' },
     update: {},
     create: {
-      email:        'recruiter@screenstack.io',
+      email:        'recruiter@skillio.io',
       name:         'Rachel Recruiter',
       passwordHash: recruiterHash,
       role:         'RECRUITER',
@@ -1478,7 +1478,9 @@ Design a robust error handling and alerting strategy for this integration:
     ],
   });
 
-  // ── New Role Templates ────────────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════════════════════
+  // ROLE TEMPLATES  (11–32) — mixed format with 2-3 coding questions each
+  // ════════════════════════════════════════════════════════════════════════════
 
   await createAssessment(admin.id, {
     title: 'Java Backend Developer Assessment',
@@ -1502,6 +1504,64 @@ Design a robust error handling and alerting strategy for this integration:
           { type: 'MULTIPLE_CHOICE', title: 'Spring Bean Scope', body: 'What is the default scope of a Spring bean?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['spring', 'beans'], config: { options: [{ label: 'Prototype', value: 'A' }, { label: 'Singleton', value: 'B' }, { label: 'Request', value: 'C' }, { label: 'Session', value: 'D' }], correct: 'B', explanation: 'Spring beans are singleton by default — one instance per application context.' } },
           { type: 'SHORT_ANSWER', title: 'Explain @Transactional', body: 'What does @Transactional do in Spring, and when would you use it?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['spring', 'transactions', 'database'], config: {} },
           { type: 'SCENARIO', title: 'Design a REST API for User Management', body: 'Design RESTful endpoints for a User Management service (CRUD operations). Include HTTP methods, URL patterns, request/response shapes, and status codes.', points: 20, difficulty: 'hard', evaluator: 'manual', skillTags: ['rest', 'api-design', 'spring'], config: { rubric: [{ criterion: 'Correct HTTP verbs (GET/POST/PUT/DELETE)', maxPoints: 5, guidance: '' }, { criterion: 'Proper URL structure (/users, /users/{id})', maxPoints: 5, guidance: '' }, { criterion: 'Meaningful status codes (201, 404, 400)', maxPoints: 5, guidance: '' }, { criterion: 'Request/response body design', maxPoints: 5, guidance: '' }] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Thread-Safe Singleton', body: `Implement a thread-safe Singleton pattern in Java using double-checked locking.
+
+The \`getInstance()\` method must be safe to call from multiple threads simultaneously without creating more than one instance.`, points: 20, difficulty: 'hard', skillTags: ['java', 'concurrency', 'design-patterns'], config: { language: 'java', starterCode: `public class DatabaseConnection {
+    private static DatabaseConnection instance;
+    private final String connectionString;
+
+    private DatabaseConnection(String url) {
+        this.connectionString = url;
+    }
+
+    public static DatabaseConnection getInstance(String url) {
+        // Implement thread-safe singleton here
+        return null;
+    }
+
+    public String getConnectionString() { return connectionString; }
+}`, testCases: [] } },
+        ],
+      },
+      {
+        title: 'Coding Challenges',
+        description: 'Practical Java problems found in real production work.',
+        questions: [
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Find Duplicate Files', body: `You have a list of file paths. Write a method that groups files with identical content (represented as a string hash) together and returns only the groups that have duplicates.
+
+Input: \`["a/1.txt:abc", "b/2.txt:def", "c/3.txt:abc"]\` (format: path:hash)
+Output: \`[["a/1.txt", "c/3.txt"]]\``, points: 20, difficulty: 'medium', skillTags: ['java', 'collections', 'grouping'], config: { language: 'java', starterCode: `import java.util.*;
+
+public class Solution {
+    public List<List<String>> findDuplicates(String[] files) {
+        // your code here
+        return new ArrayList<>();
+    }
+}`, testCases: [] } },
+          { type: 'DEBUGGING_CHALLENGE', evaluator: 'code', title: 'Fix the ConcurrentModificationException', body: `This code throws a ConcurrentModificationException at runtime. Find the bug and fix it.
+
+\`\`\`java
+public List<String> removeShortNames(List<String> names) {
+    for (String name : names) {
+        if (name.length() < 4) {
+            names.remove(name); // This line causes the issue
+        }
+    }
+    return names;
+}
+\`\`\``, points: 15, difficulty: 'medium', skillTags: ['java', 'collections', 'debugging'], config: { language: 'java', starterCode: `import java.util.*;
+
+public class Solution {
+    public List<String> removeShortNames(List<String> names) {
+        // Fix the bug - cannot modify a list while iterating it with for-each
+        for (String name : names) {
+            if (name.length() < 4) {
+                names.remove(name);
+            }
+        }
+        return names;
+    }
+}`, testCases: [] } },
         ],
       },
     ],
@@ -1528,6 +1588,74 @@ Design a robust error handling and alerting strategy for this integration:
         questions: [
           { type: 'SHORT_ANSWER', title: 'Dependency Injection in .NET', body: 'Explain how dependency injection works in ASP.NET Core. What are the three service lifetimes?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['dotnet', 'di', 'aspnet'], config: {} },
           { type: 'SCENARIO', title: 'Design a Middleware Pipeline', body: 'You need to add logging, authentication, and exception handling to an ASP.NET Core app. Describe the middleware order and why it matters.', points: 20, difficulty: 'hard', evaluator: 'manual', skillTags: ['aspnet', 'middleware', 'architecture'], config: { rubric: [{ criterion: 'Correct middleware order (exception handling first)', maxPoints: 7, guidance: '' }, { criterion: 'Explains why order matters for request/response pipeline', maxPoints: 7, guidance: '' }, { criterion: 'Mentions UseAuthentication before UseAuthorization', maxPoints: 6, guidance: '' }] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Generic Repository with EF Core', body: `Implement a generic repository interface and its base implementation using Entity Framework Core.
+
+Requirements:
+- \`IRepository<T>\` interface with: \`GetByIdAsync\`, \`GetAllAsync\`, \`AddAsync\`, \`UpdateAsync\`, \`DeleteAsync\`
+- \`BaseRepository<T>\` class implementing the interface using \`DbContext\``, points: 25, difficulty: 'hard', skillTags: ['csharp', 'ef-core', 'repository-pattern', 'architecture'], config: { language: 'csharp', starterCode: `public interface IRepository<T> where T : class
+{
+    // Define interface members
+}
+
+public class BaseRepository<T> : IRepository<T> where T : class
+{
+    private readonly DbContext _context;
+
+    public BaseRepository(DbContext context)
+    {
+        _context = context;
+    }
+    // Implement the interface
+}`, testCases: [] } },
+        ],
+      },
+      {
+        title: 'Coding Challenges',
+        description: 'Real production C# scenarios.',
+        questions: [
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Async API Controller with Validation', body: `Write an ASP.NET Core controller action that:
+1. Accepts a POST body with \`{ email: string, amount: decimal }\`
+2. Validates both fields (email format, amount > 0)
+3. Returns 400 with error details if invalid
+4. Calls an async \`_paymentService.ProcessAsync(email, amount)\`
+5. Returns 201 on success with the transaction ID`, points: 20, difficulty: 'medium', skillTags: ['csharp', 'aspnet', 'validation', 'async'], config: { language: 'csharp', starterCode: `[ApiController]
+[Route("api/[controller]")]
+public class PaymentsController : ControllerBase
+{
+    private readonly IPaymentService _paymentService;
+
+    public PaymentsController(IPaymentService paymentService)
+    {
+        _paymentService = paymentService;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ProcessPayment([FromBody] PaymentRequest request)
+    {
+        // Implement validation and business logic
+    }
+}
+
+public class PaymentRequest
+{
+    public string Email { get; set; }
+    public decimal Amount { get; set; }
+}`, testCases: [] } },
+          { type: 'DEBUGGING_CHALLENGE', evaluator: 'code', title: 'Fix the Deadlock', body: `This code causes a deadlock in ASP.NET Core. Identify the bug and fix it.
+
+\`\`\`csharp
+public string GetUserName(int userId)
+{
+    // Calling async method synchronously — causes deadlock in ASP.NET
+    var user = _userService.GetUserAsync(userId).Result;
+    return user.Name;
+}
+\`\`\``, points: 15, difficulty: 'medium', skillTags: ['csharp', 'async', 'deadlock', 'debugging'], config: { language: 'csharp', starterCode: `// Fix: make the method async and await properly
+public string GetUserName(int userId)
+{
+    var user = _userService.GetUserAsync(userId).Result; // Fix this
+    return user.Name;
+}`, testCases: [] } },
         ],
       },
     ],
@@ -1556,6 +1684,71 @@ Design a robust error handling and alerting strategy for this integration:
           { type: 'SHORT_ANSWER', title: 'Bicep vs Terraform for Azure IaC', body: 'Compare Azure Bicep and Terraform for infrastructure as code. When would you choose one over the other?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['azure', 'iac', 'terraform', 'bicep'], config: {} },
         ],
       },
+      {
+        title: 'Coding & Configuration Challenges',
+        description: 'Write real Azure infrastructure code and scripts.',
+        questions: [
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Azure Function — Process Queue Messages', body: `Write an Azure Function in C# (or Python) that:
+1. Triggers on messages from an Azure Service Bus queue named "orders"
+2. Deserializes the message JSON into an \`Order\` object with \`{ orderId, customerId, amount }\`
+3. Logs the order details
+4. Throws an exception (to trigger dead-lettering) if amount <= 0`, points: 20, difficulty: 'medium', skillTags: ['azure', 'functions', 'service-bus', 'serverless'], config: { language: 'csharp', starterCode: `using Azure.Messaging.ServiceBus;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
+
+public class OrderProcessor
+{
+    private readonly ILogger<OrderProcessor> _logger;
+
+    public OrderProcessor(ILogger<OrderProcessor> logger) => _logger = logger;
+
+    [Function("ProcessOrder")]
+    public void Run(
+        [ServiceBusTrigger("orders", Connection = "ServiceBusConnection")] string messageBody,
+        FunctionContext context)
+    {
+        // Implement message processing
+    }
+}`, testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Bicep — App Service + SQL Database', body: `Write a Bicep template that deploys:
+1. An Azure App Service Plan (B1 SKU)
+2. An App Service with a connection string pointing to the database
+3. An Azure SQL Server + Database (Basic SKU)
+4. A Key Vault to store the SQL connection string securely
+
+Use parameters for: environment name, location, admin SQL password.`, points: 25, difficulty: 'hard', skillTags: ['azure', 'bicep', 'iac', 'app-service', 'sql'], config: { language: 'bash', starterCode: `// Bicep template
+param environment string
+param location string = resourceGroup().location
+@secure()
+param sqlAdminPassword string
+
+// Define your resources below:
+// 1. App Service Plan
+// 2. App Service
+// 3. SQL Server + Database
+// 4. Key Vault`, testCases: [] } },
+          { type: 'DEBUGGING_CHALLENGE', evaluator: 'code', title: 'Fix the ARM CORS Policy', body: `This Azure Function App ARM template has a misconfigured CORS policy that blocks all browser requests. Find and fix the issue.
+
+\`\`\`json
+{
+  "properties": {
+    "siteConfig": {
+      "cors": {
+        "allowedOrigins": [],
+        "supportCredentials": true
+      }
+    }
+  }
+}
+\`\`\`
+
+The app should allow requests from https://myapp.azurestaticapps.net only.`, points: 15, difficulty: 'medium', skillTags: ['azure', 'cors', 'arm', 'debugging'], config: { language: 'bash', starterCode: `// Fix the CORS configuration in this ARM/Bicep snippet:
+cors: {
+  allowedOrigins: []  // Fix this
+  supportCredentials: true
+}`, testCases: [] } },
+        ],
+      },
     ],
   });
 
@@ -1573,6 +1766,40 @@ Design a robust error handling and alerting strategy for this integration:
           { type: 'MULTIPLE_CHOICE', title: 'ActiveRecord Associations', body: 'A User `has_many :posts` and a Post `belongs_to :user`. Which query fetches all posts for a user without N+1 queries?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['rails', 'activerecord', 'n+1'], config: { options: [{ label: 'User.all.map { |u| u.posts }', value: 'A' }, { label: 'User.includes(:posts).all', value: 'B' }, { label: 'Post.where(user_id: User.all)', value: 'C' }, { label: 'User.joins(:posts)', value: 'D' }], correct: 'B', explanation: 'includes eager-loads associations to prevent N+1.' } },
           { type: 'CODING_CHALLENGE', title: 'Ruby Enumerable', body: 'Given an array of hashes representing products, use Ruby to return the names of all products with a price > 100, sorted alphabetically.\n\n```ruby\nproducts = [\n  { name: "Widget", price: 50 },\n  { name: "Gadget", price: 150 },\n  { name: "Doohickey", price: 200 }\n]\n```', points: 15, difficulty: 'easy', evaluator: 'code', skillTags: ['ruby', 'enumerable'], config: { language: 'ruby', starterCode: '# Return array of names\ndef expensive_products(products)\n  # your code\nend', testCases: [] } },
           { type: 'SHORT_ANSWER', title: 'Rails Middleware and Rack', body: 'What is Rack in Rails? How would you add custom middleware to a Rails application?', points: 15, difficulty: 'hard', evaluator: 'manual', skillTags: ['rails', 'rack', 'middleware'], config: {} },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Soft Delete Concern', body: `Write a Rails \`SoftDeletable\` concern that:
+1. Adds a \`deleted_at\` datetime column scope
+2. Overrides \`destroy\` to set \`deleted_at\` instead of deleting
+3. Adds a \`restore!\` method to undo soft delete
+4. Adds \`default_scope\` to hide soft-deleted records from normal queries
+5. Adds a \`.with_deleted\` scope to include them when needed`, points: 20, difficulty: 'medium', skillTags: ['ruby', 'rails', 'concerns', 'soft-delete'], config: { language: 'ruby', starterCode: `module SoftDeletable
+  extend ActiveSupport::Concern
+
+  included do
+    # your scopes and callbacks here
+  end
+
+  def destroy
+    # implement soft delete
+  end
+
+  def restore!
+    # implement restore
+  end
+end`, testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Sidekiq Background Job', body: `Write a Sidekiq worker class \`SendWelcomeEmailJob\` that:
+1. Accepts a \`user_id\` argument
+2. Finds the user by ID (raise if not found)
+3. Calls \`UserMailer.welcome_email(user).deliver_now\`
+4. Logs success/failure
+5. Configure it to retry 3 times with exponential backoff, and give up after 3 retries`, points: 20, difficulty: 'medium', skillTags: ['ruby', 'rails', 'sidekiq', 'background-jobs'], config: { language: 'ruby', starterCode: `class SendWelcomeEmailJob
+  include Sidekiq::Worker
+
+  # Configure retry and backoff options here
+
+  def perform(user_id)
+    # implement the job
+  end
+end`, testCases: [] } },
         ],
       },
     ],
@@ -1600,6 +1827,68 @@ Design a robust error handling and alerting strategy for this integration:
           { type: 'SHORT_ANSWER', title: 'Terraform State Management', body: 'What is Terraform state and what problems arise from storing it locally in a team environment? What is the recommended solution?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['terraform', 'iac', 'state'], config: {} },
         ],
       },
+      {
+        title: 'Coding & Configuration Challenges',
+        description: 'Write production-grade DevOps configs and scripts.',
+        questions: [
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Multi-Stage Dockerfile for Node.js', body: `Write an optimised multi-stage Dockerfile for a Node.js TypeScript application that:
+1. Uses a \`builder\` stage to install deps and compile TypeScript to \`dist/\`
+2. Uses a minimal \`node:20-alpine\` production stage
+3. Only copies \`dist/\` and \`node_modules\` (prod only) to the final image
+4. Runs as a non-root user
+5. Exposes port 3000 and sets the CMD
+
+The repo structure: \`package.json\`, \`tsconfig.json\`, \`src/index.ts\``, points: 20, difficulty: 'medium', skillTags: ['docker', 'nodejs', 'multi-stage', 'security'], config: { language: 'bash', starterCode: `# Write your multi-stage Dockerfile here
+
+# Stage 1: Builder
+FROM node:20-alpine AS builder
+# ...
+
+# Stage 2: Production
+FROM node:20-alpine AS production
+# ...`, testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Kubernetes Deployment + HPA', body: `Write Kubernetes YAML manifests for a Node.js API service:
+
+1. **Deployment**: 3 replicas, image \`myapp:1.0\`, port 3000, CPU/memory limits (250m/256Mi), liveness + readiness probes on \`/health\`
+2. **Service**: ClusterIP on port 80 targeting 3000
+3. **HorizontalPodAutoscaler**: Scale 2–10 replicas at 70% CPU utilization`, points: 20, difficulty: 'medium', skillTags: ['kubernetes', 'hpa', 'deployments', 'probes'], config: { language: 'bash', starterCode: `# Write 3 YAML documents separated by ---
+
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+# ...
+
+---
+# Service
+# ...
+
+---
+# HPA
+# ...`, testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'GitHub Actions CI/CD Pipeline', body: `Write a GitHub Actions workflow (\`.github/workflows/deploy.yml\`) that:
+1. Triggers on push to \`main\`
+2. Runs on \`ubuntu-latest\`
+3. **test** job: runs \`npm ci\` and \`npm test\`
+4. **build-push** job (needs test): builds a Docker image tagged with the git SHA and pushes to GHCR
+5. **deploy** job (needs build-push): runs \`kubectl set image deployment/myapp myapp=ghcr.io/org/myapp:$SHA\`
+
+Use GitHub secrets for \`KUBE_CONFIG\`.`, points: 25, difficulty: 'hard', skillTags: ['github-actions', 'ci-cd', 'docker', 'kubernetes'], config: { language: 'bash', starterCode: `name: CI/CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    # ...
+
+  build-push:
+    # ...
+
+  deploy:
+    # ...`, testCases: [] } },
+        ],
+      },
     ],
   });
 
@@ -1622,7 +1911,58 @@ Design a robust error handling and alerting strategy for this integration:
       {
         title: 'Test Automation',
         questions: [
-          { type: 'CODING_CHALLENGE', title: 'Cypress/Playwright Selector', body: 'Write a Playwright test that:\n1. Navigates to `/login`\n2. Fills in email and password\n3. Clicks the submit button\n4. Asserts the user is redirected to `/dashboard`', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['playwright', 'automation', 'e2e'], config: { language: 'javascript', starterCode: "const { test, expect } = require('@playwright/test');\n\ntest('user can log in', async ({ page }) => {\n  // your code here\n});", testCases: [] } },
+          { type: 'CODING_CHALLENGE', title: 'Playwright Login Test', body: 'Write a Playwright test that:\n1. Navigates to `/login`\n2. Fills in email and password\n3. Clicks the submit button\n4. Asserts the user is redirected to `/dashboard`\n5. Asserts the page contains "Welcome" text', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['playwright', 'automation', 'e2e'], config: { language: 'javascript', starterCode: "const { test, expect } = require('@playwright/test');\n\ntest('user can log in', async ({ page }) => {\n  // your code here\n});", testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Jest Unit Test with Mocks', body: `Write Jest unit tests for the following function. Mock the \`sendEmail\` dependency so no real emails are sent.
+
+\`\`\`js
+// src/notifications.js
+const { sendEmail } = require('./email');
+
+async function notifyUser(userId, message) {
+  if (!userId || !message) throw new Error('userId and message required');
+  const result = await sendEmail({ to: userId + '@example.com', body: message });
+  return result.messageId;
+}
+module.exports = { notifyUser };
+\`\`\`
+
+Write tests for: happy path, missing userId, missing message, sendEmail failure.`, points: 20, difficulty: 'medium', skillTags: ['jest', 'unit-testing', 'mocking', 'node'], config: { language: 'javascript', starterCode: `const { notifyUser } = require('./notifications');
+const { sendEmail } = require('./email');
+
+jest.mock('./email');
+
+describe('notifyUser', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('should send email and return messageId for valid inputs', async () => {
+    // arrange
+    // act
+    // assert
+  });
+
+  // Add more tests...
+});`, testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'API Contract Test with Supertest', body: `Write a Supertest integration test for a POST /api/users endpoint that:
+1. Returns 201 with \`{ id, email, createdAt }\` for valid input \`{ email, password }\`
+2. Returns 400 with \`{ error: "Email already exists" }\` for duplicate email
+3. Returns 422 with validation errors for missing/invalid fields
+
+Use Jest + Supertest. Assume \`app\` is exported from \`./app.js\`.`, points: 20, difficulty: 'hard', skillTags: ['supertest', 'api-testing', 'integration-testing'], config: { language: 'javascript', starterCode: `const request = require('supertest');
+const app = require('./app');
+
+describe('POST /api/users', () => {
+  it('creates a user with valid data', async () => {
+    // your test
+  });
+
+  it('returns 400 for duplicate email', async () => {
+    // your test
+  });
+
+  it('returns 422 for invalid input', async () => {
+    // your test
+  });
+});`, testCases: [] } },
         ],
       },
     ],
@@ -1642,6 +1982,49 @@ Design a robust error handling and alerting strategy for this integration:
           { type: 'MULTIPLE_CHOICE', title: 'OSI Model — Attack Surface', body: 'A SQL injection attack primarily targets which OSI layer?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['security', 'osi', 'sql-injection'], config: { options: [{ label: 'Layer 3 — Network', value: 'A' }, { label: 'Layer 4 — Transport', value: 'B' }, { label: 'Layer 7 — Application', value: 'C' }, { label: 'Layer 2 — Data Link', value: 'D' }], correct: 'C', explanation: 'SQL injection exploits application logic at Layer 7.' } },
           { type: 'MULTIPLE_CHOICE', title: 'Zero Trust Model', body: 'What is the core principle of Zero Trust security?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['security', 'zero-trust'], config: { options: [{ label: 'Trust users inside the corporate network by default', value: 'A' }, { label: 'Never trust, always verify — regardless of network location', value: 'B' }, { label: 'Block all external traffic', value: 'C' }, { label: 'Use VPN for all connections', value: 'D' }], correct: 'B', explanation: 'Zero Trust assumes no implicit trust based on network location.' } },
           { type: 'SCENARIO', title: 'Incident Response Plan', body: 'Your company detects unusual outbound traffic from an internal server at 2am. Walk through your incident response process from detection to resolution.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['incident-response', 'security', 'forensics'], config: { rubric: [{ criterion: 'Immediate containment (isolate the host)', maxPoints: 7, guidance: '' }, { criterion: 'Evidence collection and logging review', maxPoints: 6, guidance: '' }, { criterion: 'Root cause analysis', maxPoints: 6, guidance: '' }, { criterion: 'Remediation and post-incident review', maxPoints: 6, guidance: '' }] } },
+        ],
+      },
+      {
+        title: 'Security Scripting & Configuration',
+        description: 'Hands-on security engineering tasks.',
+        questions: [
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Port Scanner in Python', body: `Write a Python function \`scan_ports(host, ports)\` that:
+1. Accepts a hostname/IP and a list of port numbers
+2. Attempts a TCP connection to each port with a 1-second timeout
+3. Returns a dict \`{ port: "open" | "closed" }\`
+4. Runs port checks concurrently using \`concurrent.futures.ThreadPoolExecutor\`
+
+Example: \`scan_ports("192.168.1.1", [22, 80, 443, 8080])\``, points: 20, difficulty: 'medium', skillTags: ['python', 'networking', 'security-tooling', 'concurrency'], config: { language: 'python', starterCode: `import socket
+from concurrent.futures import ThreadPoolExecutor
+
+def scan_ports(host: str, ports: list[int]) -> dict[int, str]:
+    # your implementation here
+    pass`, testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Detect Brute Force in Log File', body: `Write a Python function \`detect_brute_force(log_lines, threshold=5, window_seconds=60)\` that:
+1. Parses lines in the format: \`2024-01-15 10:23:45 FAIL 192.168.1.100 /login\`
+2. Returns a list of IPs that had \`threshold\` or more failed login attempts within any \`window_seconds\` sliding window
+3. Sort results by number of attempts descending`, points: 25, difficulty: 'hard', skillTags: ['python', 'security', 'log-analysis', 'brute-force-detection'], config: { language: 'python', starterCode: `from datetime import datetime
+from collections import defaultdict
+
+def detect_brute_force(log_lines: list[str], threshold: int = 5, window_seconds: int = 60) -> list[str]:
+    # Parse logs and find brute force attackers
+    pass`, testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'iptables Firewall Rules', body: `Write iptables rules (or equivalent nftables/ufw commands) to implement this security policy for a web server:
+
+1. Allow all established/related connections
+2. Allow SSH (port 22) only from the admin subnet 10.0.1.0/24
+3. Allow HTTP (80) and HTTPS (443) from anywhere
+4. Allow ICMP ping from anywhere (rate-limited to 5/second)
+5. Drop all other incoming traffic
+6. Log dropped packets to syslog
+
+Write the commands in order, explaining each rule.`, points: 20, difficulty: 'medium', skillTags: ['linux', 'iptables', 'firewall', 'network-security'], config: { language: 'bash', starterCode: `#!/bin/bash
+# Set default policies
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+
+# Add your rules below:`, testCases: [] } },
         ],
       },
     ],
@@ -1667,6 +2050,41 @@ Design a robust error handling and alerting strategy for this integration:
         title: 'Model Design & MLOps',
         questions: [
           { type: 'SCENARIO', title: 'ML System Design', body: 'Design an end-to-end ML pipeline to predict customer churn for a SaaS product. Include: data sources, feature engineering, model selection, training, evaluation, and deployment considerations.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['ml', 'mlops', 'system-design'], config: { rubric: [{ criterion: 'Identifies relevant features (usage, billing, support tickets)', maxPoints: 6, guidance: '' }, { criterion: 'Appropriate model choice with justification', maxPoints: 6, guidance: '' }, { criterion: 'Evaluation metrics (precision, recall, AUC for imbalanced classes)', maxPoints: 7, guidance: '' }, { criterion: 'Deployment and monitoring strategy', maxPoints: 6, guidance: '' }] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Train & Evaluate a Classifier', body: `Write a Python function that:
+1. Loads the provided dataset (X: features array, y: labels array)
+2. Splits it 80/20 train/test with stratification and random_state=42
+3. Trains a Random Forest classifier
+4. Returns a dict: \`{ accuracy, precision, recall, f1, confusion_matrix }\` on the test set
+
+Use scikit-learn. The dataset may be class-imbalanced.`, points: 20, difficulty: 'medium', skillTags: ['python', 'scikit-learn', 'classification', 'model-evaluation'], config: { language: 'python', starterCode: `from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import numpy as np
+
+def train_and_evaluate(X: np.ndarray, y: np.ndarray) -> dict:
+    # Your implementation
+    pass`, testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Custom Preprocessing Pipeline', body: `Write a scikit-learn Pipeline that preprocesses a mixed dataset (numeric + categorical) for a classification model:
+
+1. Numeric columns: impute missing with median, then StandardScaler
+2. Categorical columns: impute missing with most frequent, then OneHotEncoder (handle_unknown='ignore')
+3. Combine with ColumnTransformer
+4. Append a LogisticRegression estimator at the end
+5. Return a fitted pipeline
+
+Columns: numeric = ['age', 'income', 'tenure'], categorical = ['plan', 'region']`, points: 25, difficulty: 'hard', skillTags: ['python', 'scikit-learn', 'pipeline', 'feature-engineering'], config: { language: 'python', starterCode: `from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+import pandas as pd
+
+NUMERIC_COLS = ['age', 'income', 'tenure']
+CATEGORICAL_COLS = ['plan', 'region']
+
+def build_pipeline() -> Pipeline:
+    # Build and return the pipeline
+    pass`, testCases: [] } },
         ],
       },
     ],
@@ -1692,6 +2110,39 @@ Design a robust error handling and alerting strategy for this integration:
         title: 'RAG & Architecture',
         questions: [
           { type: 'SCENARIO', title: 'Design a RAG System', body: 'Design a Retrieval-Augmented Generation (RAG) system for a company knowledge base with 10,000 documents. Include: document ingestion, chunking strategy, vector store, retrieval, and response generation.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['rag', 'vector-db', 'llm', 'architecture'], config: { rubric: [{ criterion: 'Document chunking strategy with overlap', maxPoints: 6, guidance: '' }, { criterion: 'Embedding model selection and vector store', maxPoints: 6, guidance: '' }, { criterion: 'Retrieval strategy (semantic + keyword hybrid)', maxPoints: 7, guidance: '' }, { criterion: 'Prompt construction and answer generation', maxPoints: 6, guidance: '' }] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Build a Simple RAG Pipeline', body: `Write a Python function \`answer_question(question, docs)\` that implements a basic RAG pipeline:
+1. Embed the question using \`embed(text) -> list[float]\` (provided)
+2. Embed each doc in \`docs\` (list of strings) and compute cosine similarity
+3. Retrieve the top-3 most similar docs
+4. Call \`llm_complete(prompt) -> str\` with a prompt that includes the context
+5. Return the LLM's answer
+
+Helper functions \`embed(text)\` and \`llm_complete(prompt)\` are available as imports.`, points: 25, difficulty: 'hard', skillTags: ['python', 'rag', 'embeddings', 'llm'], config: { language: 'python', starterCode: `from helpers import embed, llm_complete
+import math
+
+def cosine_similarity(a: list[float], b: list[float]) -> float:
+    # implement cosine similarity
+    pass
+
+def answer_question(question: str, docs: list[str]) -> str:
+    # 1. Embed question
+    # 2. Embed docs and find top-3
+    # 3. Build prompt with context
+    # 4. Call llm_complete and return answer
+    pass`, testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Prompt Chain with Tool Calls', body: `Write a Python function \`research_and_summarize(topic)\` that:
+1. Calls \`search_web(query) -> list[str]\` to get 5 results about the topic
+2. For each result, calls \`extract_facts(text) -> list[str]\` to pull key facts
+3. Deduplicates and combines all facts
+4. Calls \`llm_summarize(facts) -> str\` to produce a final summary
+5. Returns the summary with a \`sources_count\` metadata dict
+
+This tests your ability to orchestrate multi-step LLM tool pipelines.`, points: 20, difficulty: 'medium', skillTags: ['python', 'llm', 'prompt-chaining', 'orchestration'], config: { language: 'python', starterCode: `from tools import search_web, extract_facts, llm_summarize
+
+def research_and_summarize(topic: str) -> dict:
+    """Returns { 'summary': str, 'sources_count': int }"""
+    # implement the pipeline
+    pass`, testCases: [] } },
         ],
       },
     ],
@@ -1713,10 +2164,70 @@ Design a robust error handling and alerting strategy for this integration:
           { type: 'SCENARIO', title: 'Serverless Architecture Design', body: 'Design a serverless architecture on AWS for an API that processes image uploads, extracts metadata using ML, and stores results in a database. Use AWS-native services and explain your choices.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['aws', 'serverless', 'architecture'], config: { rubric: [{ criterion: 'S3 for upload + Lambda trigger', maxPoints: 7, guidance: '' }, { criterion: 'Amazon Rekognition or SageMaker for ML', maxPoints: 6, guidance: '' }, { criterion: 'DynamoDB or RDS for metadata storage', maxPoints: 6, guidance: '' }, { criterion: 'API Gateway + Lambda for the API layer', maxPoints: 6, guidance: '' }] } },
         ],
       },
+      {
+        title: 'Coding & Infrastructure Challenges',
+        description: 'Write real AWS Lambda code and IaC configurations.',
+        questions: [
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Lambda: Process S3 Upload Event', body: `Write an AWS Lambda function (Python) that:
+1. Triggers when a file is uploaded to an S3 bucket
+2. Reads the uploaded file content (assume it's a CSV)
+3. Validates each row has \`name\`, \`email\`, \`amount\` columns
+4. Writes valid rows to DynamoDB table "Transactions"
+5. Returns the count of valid and invalid rows
+
+Use boto3. The Lambda event object follows the standard S3 event format.`, points: 20, difficulty: 'medium', skillTags: ['aws', 'lambda', 's3', 'dynamodb', 'python'], config: { language: 'python', starterCode: `import boto3
+import csv
+import io
+
+dynamodb = boto3.resource('dynamodb')
+s3_client = boto3.client('s3')
+table = dynamodb.Table('Transactions')
+
+def handler(event, context):
+    # Get bucket and key from event
+    # Download and parse CSV
+    # Validate and write to DynamoDB
+    pass`, testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'Terraform: ECS Fargate Service', body: `Write a Terraform configuration that deploys:
+
+1. An ECS Cluster
+2. A Fargate Task Definition running \`nginx:latest\` on port 80, with 256 CPU and 512MB memory
+3. An ECS Service with 2 desired tasks in a given subnet
+4. An Application Load Balancer with a target group pointing to port 80
+5. A security group allowing HTTP (80) from 0.0.0.0/0 to the ALB
+
+Use variables for: \`vpc_id\`, \`subnet_ids\`, \`cluster_name\`.`, points: 25, difficulty: 'hard', skillTags: ['aws', 'terraform', 'ecs', 'fargate', 'alb'], config: { language: 'bash', starterCode: `variable "vpc_id" {}
+variable "subnet_ids" { type = list(string) }
+variable "cluster_name" { default = "my-cluster" }
+
+# Define your resources:
+# 1. aws_ecs_cluster
+# 2. aws_ecs_task_definition
+# 3. aws_ecs_service
+# 4. aws_lb + aws_lb_target_group + aws_lb_listener
+# 5. aws_security_group`, testCases: [] } },
+          { type: 'CODING_CHALLENGE', evaluator: 'code', title: 'AWS CDK: SNS → SQS → Lambda', body: `Write an AWS CDK stack (Python or TypeScript) that creates:
+1. An SNS Topic for order events
+2. An SQS Queue subscribed to the topic (with dead-letter queue after 3 failures)
+3. A Lambda function that processes messages from the queue
+4. Proper IAM permissions for each component
+5. Export the SNS topic ARN as a stack output`, points: 20, difficulty: 'hard', skillTags: ['aws', 'cdk', 'sns', 'sqs', 'lambda'], config: { language: 'javascript', starterCode: `import * as cdk from 'aws-cdk-lib';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+
+export class OrderProcessingStack extends cdk.Stack {
+  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+    // Define your infrastructure here
+  }
+}`, testCases: [] } },
+        ],
+      },
     ],
   });
 
-  // ── Additional Role Templates ─────────────────────────────────────────────
+  // ── Additional Role Templates (improved with 2-3 coding Qs each) ─────────
 
   await createAssessment(admin.id, {
     title: 'Go (Golang) Developer Assessment',
@@ -1728,6 +2239,10 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'MULTIPLE_CHOICE', title: 'Goroutine vs Thread', body: 'What is the primary advantage of goroutines over OS threads?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['go', 'concurrency'], config: { options: [{ label: 'Goroutines are faster to create and use less memory', value: 'A' }, { label: 'Goroutines run on separate CPU cores automatically', value: 'B' }, { label: 'Goroutines cannot block each other', value: 'C' }, { label: 'Goroutines support preemptive scheduling', value: 'D' }], correct: 'A', explanation: 'Goroutines are multiplexed onto OS threads by the Go runtime, using ~2KB vs ~1MB for OS threads.' } },
         { type: 'CODING_CHALLENGE', title: 'Concurrent Fan-Out', body: 'Write a Go function that takes a slice of URLs and fetches them all concurrently using goroutines and channels. Return a map of URL → response body (or error string).', points: 20, difficulty: 'hard', evaluator: 'code', skillTags: ['go', 'goroutines', 'channels'], config: { language: 'go', starterCode: 'package main\n\nimport "net/http"\n\nfunc fetchAll(urls []string) map[string]string {\n    // your code here\n    return nil\n}', testCases: [] } },
         { type: 'SHORT_ANSWER', title: 'Go Error Handling Patterns', body: 'How does Go handle errors differently from exceptions in Java/Python? What are the best practices for wrapping and propagating errors in Go 1.13+?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['go', 'error-handling'], config: {} },
+      ]},
+      { title: 'Go Coding Challenges', questions: [
+        { type: 'CODING_CHALLENGE', title: 'HTTP Middleware Chain', body: 'Write two Go HTTP middleware functions: (1) `WithLogging` that logs method, path, and request duration to stdout; (2) `WithRateLimit(rps int)` that enforces a per-IP token-bucket rate limit. Both should wrap an `http.Handler` and return an `http.Handler`.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['go', 'http', 'middleware'], config: { language: 'go', starterCode: 'package main\n\nimport (\n\t"fmt"\n\t"net/http"\n\t"sync"\n\t"time"\n)\n\nfunc WithLogging(next http.Handler) http.Handler {\n\t// log: method, path, duration\n\treturn nil\n}\n\nfunc WithRateLimit(rps int, next http.Handler) http.Handler {\n\t// max rps requests per IP per second (token bucket)\n\treturn nil\n}', testCases: [] } },
+        { type: 'DEBUGGING_CHALLENGE', title: 'Fix the Data Race', body: 'The counter below has a data race detected by `go test -race`. Fix it without changing the function signature — use `sync/atomic` or a `sync.Mutex`.\n\n```go\nvar counter int\n\nfunc incrementAll(n int) {\n    var wg sync.WaitGroup\n    for i := 0; i < n; i++ {\n        wg.Add(1)\n        go func() { defer wg.Done(); counter++ }()\n    }\n    wg.Wait()\n}\n```', points: 15, difficulty: 'medium', evaluator: 'code', skillTags: ['go', 'concurrency', 'race-condition'], config: { language: 'go', starterCode: 'package main\n\nimport "sync"\n\nvar counter int\n\nfunc incrementAll(n int) {\n\tvar wg sync.WaitGroup\n\tfor i := 0; i < n; i++ {\n\t\twg.Add(1)\n\t\tgo func() { defer wg.Done(); counter++ }()\n\t}\n\twg.Wait()\n}', testCases: [] } },
       ]},
     ],
   });
@@ -1746,6 +2261,9 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'SHORT_ANSWER', title: 'Django ORM N+1', body: 'Explain the N+1 query problem in Django. Give a concrete example and show how to fix it using Django ORM methods.', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['django', 'orm', 'performance'], config: {} },
         { type: 'SCENARIO', title: 'Django REST API Design', body: 'Design a Django REST Framework API for a blog platform with Posts, Comments, and Users. Include serializer design, viewsets, permissions, and pagination strategy.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['django', 'drf', 'api-design'], config: { rubric: [{ criterion: 'Correct serializer nesting and read/write separation', maxPoints: 7, guidance: '' }, { criterion: 'ViewSets with appropriate actions', maxPoints: 6, guidance: '' }, { criterion: 'Permission classes (IsAuthenticated, IsOwnerOrReadOnly)', maxPoints: 6, guidance: '' }, { criterion: 'Pagination and filtering', maxPoints: 6, guidance: '' }] } },
       ]},
+      { title: 'Python Coding Challenges', questions: [
+        { type: 'CODING_CHALLENGE', title: 'Async Rate-Limited HTTP Fetcher', body: 'Write an async Python function `fetch_all(urls, max_concurrent=5)` using `aiohttp` and `asyncio.Semaphore` to cap concurrent requests. Return a list of `(url, status_code, text)` tuples. Handle network errors gracefully — return `(url, 0, error_message)` on failure.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['python', 'async', 'aiohttp'], config: { language: 'python', starterCode: 'import asyncio\nimport aiohttp\nfrom typing import List, Tuple\n\nasync def fetch_all(\n    urls: List[str],\n    max_concurrent: int = 5,\n) -> List[Tuple[str, int, str]]:\n    """Fetch all URLs concurrently, limited to max_concurrent at once."""\n    # your code here\n    pass', testCases: [] } },
+      ]},
     ],
   });
 
@@ -1759,6 +2277,9 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'MULTIPLE_CHOICE', title: 'Laravel Service Container', body: 'What is the primary purpose of the Laravel Service Container?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['laravel', 'di', 'service-container'], config: { options: [{ label: 'Managing database connections', value: 'A' }, { label: 'Dependency injection and class resolution', value: 'B' }, { label: 'Routing HTTP requests', value: 'C' }, { label: 'Caching query results', value: 'D' }], correct: 'B', explanation: 'The Service Container resolves class dependencies and manages bindings for dependency injection.' } },
         { type: 'SHORT_ANSWER', title: 'Laravel Queues & Jobs', body: 'Explain how Laravel queues work. When would you use a queued job versus a synchronous operation? How do you handle failed jobs?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['laravel', 'queues', 'jobs'], config: {} },
         { type: 'CODING_CHALLENGE', title: 'Eloquent Relationships', body: 'A User has many Orders, and each Order has many Products (many-to-many via order_items). Write an Eloquent query to fetch all users who placed more than 5 orders in the last 30 days, eager-loading their orders and total spend.', points: 20, difficulty: 'hard', evaluator: 'code', skillTags: ['laravel', 'eloquent', 'database'], config: { language: 'php', starterCode: '<?php\n// Write your Eloquent query here\n$users = User::query()\n    // ...\n    ->get();', testCases: [] } },
+      ]},
+      { title: 'Laravel Coding Challenges', questions: [
+        { type: 'CODING_CHALLENGE', title: 'Repository with Redis Cache', body: 'Implement a `UserRepository` in Laravel that: (1) fetches a user by ID from the database and caches the result in Redis for 5 minutes; (2) on `update()`, saves to the DB and invalidates the cached entry; (3) on `delete()`, removes the record and its cache key.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['laravel', 'repository', 'cache', 'redis'], config: { language: 'php', starterCode: '<?php\n\nuse Illuminate\\Support\\Facades\\Cache;\nuse App\\Models\\User;\n\nclass UserRepository\n{\n    public function findById(int $id): ?User\n    {\n        // cache key: "user:{$id}"\n    }\n\n    public function update(int $id, array $data): User\n    {\n        // update DB + invalidate cache\n    }\n\n    public function delete(int $id): void\n    {\n        // delete from DB + remove cache\n    }\n}', testCases: [] } },
       ]},
     ],
   });
@@ -1774,6 +2295,10 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'SHORT_ANSWER', title: 'SwiftUI vs UIKit', body: 'Compare SwiftUI and UIKit. When would you choose UIKit over SwiftUI in a new iOS project in 2024?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['swiftui', 'uikit', 'ios'], config: {} },
         { type: 'SCENARIO', title: 'iOS App Architecture', body: 'Design the architecture for an iOS news app that fetches articles from a REST API, caches them for offline use, and displays them in a paginated list. What patterns and frameworks would you use?', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['ios', 'architecture', 'mvvm'], config: { rubric: [{ criterion: 'Architecture pattern (MVVM, Clean, etc.)', maxPoints: 7, guidance: '' }, { criterion: 'Networking layer with async/await or Combine', maxPoints: 6, guidance: '' }, { criterion: 'Offline caching strategy (Core Data / URLCache)', maxPoints: 6, guidance: '' }, { criterion: 'UI layer — SwiftUI or UIKit with pagination', maxPoints: 6, guidance: '' }] } },
       ]},
+      { title: 'Swift Coding Challenges', questions: [
+        { type: 'CODING_CHALLENGE', title: 'Generic async/await Network Client', body: 'Write a Swift `fetch<T: Decodable>(_ url: URL) async throws -> T` function that: makes a URLSession data task, decodes the JSON response into a Decodable type, maps HTTP 4xx/5xx responses to a `NetworkError.httpError(Int)` case, and retries the request once on `.networkFailure`.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['swift', 'networking', 'async-await', 'generics'], config: { language: 'swift', starterCode: 'import Foundation\n\nenum NetworkError: Error {\n    case httpError(Int)\n    case decodingFailed(Error)\n    case networkFailure(Error)\n}\n\nfunc fetch<T: Decodable>(_ url: URL) async throws -> T {\n    // your code here\n}', testCases: [] } },
+        { type: 'CODING_CHALLENGE', title: 'Thread-Safe Cache Using Actor', body: 'Implement a generic thread-safe in-memory cache using Swift\'s `actor` model. Support: `get(_ key:) -> Value?` (returns nil if expired), `set(_ key:, value:, ttl: TimeInterval?)` (optional TTL), and `invalidate(_ key:)`. Entries with TTL should not be returned after expiry.', points: 25, difficulty: 'hard', evaluator: 'code', skillTags: ['swift', 'actor', 'concurrency', 'generics'], config: { language: 'swift', starterCode: 'import Foundation\n\nactor Cache<Key: Hashable, Value> {\n    private struct Entry {\n        let value: Value\n        let expiresAt: Date?\n    }\n    private var storage: [Key: Entry] = [:]\n\n    func get(_ key: Key) -> Value? {\n        // return nil if missing or expired\n    }\n\n    func set(_ key: Key, value: Value, ttl: TimeInterval? = nil) {\n        // store with optional expiry\n    }\n\n    func invalidate(_ key: Key) {\n        // remove entry\n    }\n}', testCases: [] } },
+      ]},
     ],
   });
 
@@ -1787,6 +2312,9 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'MULTIPLE_CHOICE', title: 'Coroutine Scope', body: 'Which coroutine scope should you use for operations that should survive screen rotation in an Android ViewModel?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['kotlin', 'coroutines', 'android'], config: { options: [{ label: 'GlobalScope', value: 'A' }, { label: 'lifecycleScope', value: 'B' }, { label: 'viewModelScope', value: 'C' }, { label: 'CoroutineScope(Dispatchers.IO)', value: 'D' }], correct: 'C', explanation: 'viewModelScope is tied to the ViewModel lifecycle and survives configuration changes like screen rotation.' } },
         { type: 'SHORT_ANSWER', title: 'Jetpack Compose Recomposition', body: 'Explain what triggers recomposition in Jetpack Compose. How do you prevent unnecessary recompositions and optimise performance?', points: 15, difficulty: 'hard', evaluator: 'manual', skillTags: ['compose', 'android', 'performance'], config: {} },
         { type: 'CODING_CHALLENGE', title: 'Flow + StateFlow', body: 'Write a Kotlin ViewModel that fetches a list of products from a repository, exposes them as a StateFlow, and handles loading/error/success states using a sealed class.', points: 20, difficulty: 'hard', evaluator: 'code', skillTags: ['kotlin', 'flow', 'viewmodel'], config: { language: 'kotlin', starterCode: 'class ProductViewModel(private val repo: ProductRepository) : ViewModel() {\n    // your code here\n}', testCases: [] } },
+      ]},
+      { title: 'Android Coding Challenges', questions: [
+        { type: 'CODING_CHALLENGE', title: 'Room DAO with Complex Queries', body: 'Write a Room DAO for a `Task` entity (`id: Long, title: String, priority: Int, dueDate: LocalDate, completed: Boolean`). Include: (1) query for all incomplete tasks ordered by priority ASC then dueDate ASC; (2) query for tasks due within the next N days; (3) update query to mark all overdue tasks as completed.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['android', 'room', 'database', 'kotlin'], config: { language: 'kotlin', starterCode: 'import androidx.room.*\nimport java.time.LocalDate\n\n@Entity(tableName = "tasks")\ndata class Task(\n    @PrimaryKey val id: Long,\n    val title: String,\n    val priority: Int,\n    val dueDate: LocalDate,\n    val completed: Boolean\n)\n\n@Dao\ninterface TaskDao {\n    // implement the three queries here\n}', testCases: [] } },
       ]},
     ],
   });
@@ -1802,6 +2330,9 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'CODING_CHALLENGE', title: 'Custom Composable', body: 'Write a Vue 3 composable `useDebounce(value, delay)` that returns a debounced version of a reactive ref. It should debounce updates by `delay` ms.', points: 20, difficulty: 'hard', evaluator: 'code', skillTags: ['vue', 'composables', 'reactivity'], config: { language: 'javascript', starterCode: 'import { ref, watch } from "vue";\n\nexport function useDebounce(value, delay = 300) {\n  // your code here\n}', testCases: [] } },
         { type: 'SHORT_ANSWER', title: 'Pinia vs Vuex', body: 'What are the main advantages of Pinia over Vuex 4 for state management in Vue 3 applications?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['vue', 'pinia', 'state-management'], config: {} },
       ]},
+      { title: 'Vue Coding Challenges', questions: [
+        { type: 'CODING_CHALLENGE', title: 'Pinia Store with localStorage Persistence', body: 'Write a Pinia store (Composition API style) for a shopping cart that: tracks `items: CartItem[]` with `id`, `name`, `price`, `quantity`; exposes `totalPrice` and `itemCount` getters; has `addItem`, `removeItem`, and `clearCart` actions; and automatically persists + rehydrates state from `localStorage` via a `$subscribe` watcher.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['vue', 'pinia', 'state-management', 'localStorage'], config: { language: 'javascript', starterCode: 'import { defineStore } from "pinia";\nimport { ref, computed } from "vue";\n\nexport const useCartStore = defineStore("cart", () => {\n  // implement state, getters, actions + localStorage persistence\n});', testCases: [] } },
+      ]},
     ],
   });
 
@@ -1815,6 +2346,10 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'MULTIPLE_CHOICE', title: 'GraphQL N+1 Problem', body: 'What is the DataLoader pattern used for in GraphQL?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['graphql', 'performance', 'dataloader'], config: { options: [{ label: 'Lazy loading schema definitions', value: 'A' }, { label: 'Batching and caching database requests to prevent N+1 queries', value: 'B' }, { label: 'Streaming large query responses', value: 'C' }, { label: 'Validating query depth limits', value: 'D' }], correct: 'B', explanation: 'DataLoader batches all individual item lookups from a tick into a single bulk request, preventing N+1.' } },
         { type: 'SCENARIO', title: 'GraphQL Schema Design', body: 'Design a GraphQL schema for an e-commerce platform with Products, Categories, Users, and Orders. Include: types, queries, mutations, and at least one subscription. Consider pagination and filtering.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['graphql', 'schema-design', 'api'], config: { rubric: [{ criterion: 'Well-structured types with proper relationships', maxPoints: 7, guidance: '' }, { criterion: 'Queries with filtering and cursor-based pagination', maxPoints: 6, guidance: '' }, { criterion: 'Mutations with input types and error handling', maxPoints: 6, guidance: '' }, { criterion: 'Subscription for real-time order updates', maxPoints: 6, guidance: '' }] } },
         { type: 'SHORT_ANSWER', title: 'REST vs GraphQL Tradeoffs', body: 'When would you choose GraphQL over REST? What are the main drawbacks of GraphQL and how do you mitigate them?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['graphql', 'rest', 'architecture'], config: {} },
+      ]},
+      { title: 'GraphQL Coding Challenges', questions: [
+        { type: 'CODING_CHALLENGE', title: 'DataLoader for N+1 Prevention', body: 'Implement a DataLoader for a `comments` field on a Post type. The batch function receives an array of post IDs and must fetch all comments in a single `db.getCommentsByPostIds(ids)` call, then return them grouped by post ID (in the same order as the input IDs).', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['graphql', 'dataloader', 'performance', 'n+1'], config: { language: 'javascript', starterCode: 'const DataLoader = require("dataloader");\n\n// db.getCommentsByPostIds(ids: string[]) => Promise<{postId: string, id: string, text: string}[]>\n\nconst commentLoader = new DataLoader(async (postIds) => {\n  // batch-fetch, then return array in same order as postIds\n  // each element should be an array of comments for that postId\n});', testCases: [] } },
+        { type: 'CODING_CHALLENGE', title: 'Cursor-Based Pagination', body: 'Implement a GraphQL resolver for `products(first: Int, after: String): ProductConnection`. The `after` argument is a base64-encoded product ID. Query the DB using `WHERE id > decodedCursor LIMIT first + 1`, determine `hasNextPage`, encode the last item ID as the `endCursor`, and return the Relay-spec Connection shape.', points: 25, difficulty: 'hard', evaluator: 'code', skillTags: ['graphql', 'pagination', 'relay', 'cursor'], config: { language: 'javascript', starterCode: '// Relay-spec ProductConnection resolver\nasync function products(_, { first = 10, after }, { db }) {\n  // decode cursor: Buffer.from(after, "base64").toString()\n  // encode cursor: Buffer.from(String(id)).toString("base64")\n  // return { edges: [{ node, cursor }], pageInfo: { hasNextPage, endCursor } }\n}', testCases: [] } },
       ]},
     ],
   });
@@ -1833,6 +2368,9 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'SHORT_ANSWER', title: 'JWT Authentication Flow', body: 'Describe the complete flow of JWT authentication: from user login to accessing a protected API endpoint. Include where tokens are stored and how they are validated.', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['auth', 'jwt', 'security'], config: {} },
         { type: 'SQL_CHALLENGE', title: 'SQL Aggregation', body: 'Given tables `orders(id, user_id, created_at, total)` and `users(id, name, email)`, write a SQL query to find the top 5 users by total spend in the last 90 days, including their name and total spend.', points: 20, difficulty: 'medium', evaluator: 'sql', skillTags: ['sql', 'aggregation', 'joins'], config: { schema: 'CREATE TABLE users (id INT, name VARCHAR, email VARCHAR);\nCREATE TABLE orders (id INT, user_id INT, created_at DATE, total DECIMAL);', expectedSql: 'SELECT u.name, SUM(o.total) as total_spend FROM orders o JOIN users u ON o.user_id = u.id WHERE o.created_at >= NOW() - INTERVAL 90 DAY GROUP BY u.id, u.name ORDER BY total_spend DESC LIMIT 5' } },
       ]},
+      { title: 'Full Stack Coding Challenges', questions: [
+        { type: 'CODING_CHALLENGE', title: 'JWT Authentication Middleware', body: 'Write an Express middleware `authenticate(req, res, next)` that: extracts a Bearer token from the `Authorization` header; verifies it using `jsonwebtoken` with `JWT_SECRET`; attaches the decoded payload to `req.user`; and returns a `401 { error: "..." }` JSON response for missing, invalid, or expired tokens.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['node', 'jwt', 'auth', 'middleware'], config: { language: 'javascript', starterCode: 'const jwt = require("jsonwebtoken");\nconst { JWT_SECRET } = process.env;\n\n/**\n * Verifies Bearer JWT from Authorization header.\n * Attaches decoded payload to req.user on success.\n */\nfunction authenticate(req, res, next) {\n  // your code here\n}\n\nmodule.exports = { authenticate };', testCases: [] } },
+      ]},
     ],
   });
 
@@ -1846,6 +2384,9 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'MULTIPLE_CHOICE', title: 'Reentrancy Attack', body: 'What is a reentrancy attack in Ethereum smart contracts?', points: 10, difficulty: 'hard', evaluator: 'multiple_choice', skillTags: ['solidity', 'security', 'reentrancy'], config: { options: [{ label: 'Calling the same function too many times per block', value: 'A' }, { label: 'An external contract recursively calling back into the vulnerable contract before state updates complete', value: 'B' }, { label: 'Front-running a transaction in the mempool', value: 'C' }, { label: 'Overflowing a uint256 variable', value: 'D' }], correct: 'B', explanation: 'Reentrancy exploits the fact that external calls happen before state changes, allowing recursive draining (e.g. The DAO hack).' } },
         { type: 'CODING_CHALLENGE', title: 'ERC-20 Token', body: 'Write a minimal ERC-20 token contract in Solidity with name, symbol, totalSupply, balanceOf, transfer, and approve/transferFrom. Include a constructor that mints the initial supply to the deployer.', points: 25, difficulty: 'hard', evaluator: 'code', skillTags: ['solidity', 'erc20', 'ethereum'], config: { language: 'solidity', starterCode: '// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract MyToken {\n    // your code here\n}', testCases: [] } },
         { type: 'SHORT_ANSWER', title: 'Gas Optimisation', body: 'List three specific Solidity patterns or techniques that reduce gas costs and explain why each one works.', points: 15, difficulty: 'hard', evaluator: 'manual', skillTags: ['solidity', 'gas', 'optimisation'], config: {} },
+      ]},
+      { title: 'Smart Contract Coding Challenges', questions: [
+        { type: 'CODING_CHALLENGE', title: 'Reentrancy-Safe ETH Escrow', body: 'Write a Solidity escrow contract where: (1) the buyer deposits ETH on deployment; (2) the buyer can call `release()` to send ETH to the seller; (3) the buyer can call `refund()` before release to get ETH back; (4) the contract uses checks-effects-interactions pattern and a `nonReentrant` guard to prevent reentrancy attacks.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['solidity', 'security', 'escrow', 'reentrancy'], config: { language: 'solidity', starterCode: '// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract Escrow {\n    address public immutable buyer;\n    address public immutable seller;\n    uint public immutable amount;\n    bool public released;\n    bool private _locked;\n\n    constructor(address _seller) payable {\n        buyer = msg.sender;\n        seller = _seller;\n        amount = msg.value;\n    }\n\n    // your code here\n}', testCases: [] } },
       ]},
     ],
   });
@@ -1861,6 +2402,10 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'SQL_CHALLENGE', title: 'Query Optimisation', body: 'The following query runs in 30 seconds on a 50M-row orders table. Identify the issues and rewrite it:\n\n```sql\nSELECT * FROM orders WHERE YEAR(created_at) = 2024 AND status != "cancelled";\n```', points: 20, difficulty: 'hard', evaluator: 'sql', skillTags: ['sql', 'optimisation', 'indexing'], config: { schema: 'CREATE TABLE orders (id BIGINT, created_at DATETIME, status VARCHAR(20), total DECIMAL, user_id INT);', expectedSql: 'SELECT * FROM orders WHERE created_at >= "2024-01-01" AND created_at < "2025-01-01" AND status != "cancelled";' } },
         { type: 'SCENARIO', title: 'High Availability Strategy', body: 'Design a high-availability PostgreSQL setup for a SaaS application requiring 99.9% uptime and < 1 minute RTO. Describe replication topology, failover strategy, and backup approach.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['postgresql', 'replication', 'ha', 'backup'], config: { rubric: [{ criterion: 'Primary + standby replication setup (streaming / logical)', maxPoints: 7, guidance: '' }, { criterion: 'Automated failover tool (Patroni, repmgr, etc.)', maxPoints: 6, guidance: '' }, { criterion: 'Backup strategy (pg_dump, WAL archiving, PITR)', maxPoints: 6, guidance: '' }, { criterion: 'Connection pooling and load balancing (PgBouncer)', maxPoints: 6, guidance: '' }] } },
       ]},
+      { title: 'Database Coding Challenges', questions: [
+        { type: 'SQL_CHALLENGE', title: 'Recursive Org Chart CTE', body: 'Using `employees(id, name, manager_id)`, write a recursive CTE that returns each employee\'s `id`, `name`, `depth` (0 = CEO), and `path` string (e.g. `"CEO > VP Eng > Alice"`). Order by path.', points: 20, difficulty: 'medium', evaluator: 'sql', skillTags: ['sql', 'cte', 'recursive', 'postgresql'], config: { schema: 'CREATE TABLE employees (\n  id INT PRIMARY KEY,\n  name VARCHAR(100),\n  manager_id INT REFERENCES employees(id)\n);', expectedSql: 'WITH RECURSIVE chain AS (\n  SELECT id, name, manager_id, 0 AS depth, name::text AS path\n  FROM employees WHERE manager_id IS NULL\n  UNION ALL\n  SELECT e.id, e.name, e.manager_id, c.depth + 1, c.path || \' > \' || e.name\n  FROM employees e JOIN chain c ON e.manager_id = c.id\n)\nSELECT id, name, depth, path FROM chain ORDER BY path;' } },
+        { type: 'CODING_CHALLENGE', title: 'PL/pgSQL Upsert Function', body: 'Write a PostgreSQL PL/pgSQL function `upsert_product(p_sku TEXT, p_name TEXT, p_price NUMERIC, p_stock INT) RETURNS INT` that inserts a new product or updates `name`, `price`, and `stock` if the SKU already exists (using `INSERT ... ON CONFLICT DO UPDATE`). Return the product\'s `id`.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['postgresql', 'plpgsql', 'upsert'], config: { language: 'sql', starterCode: 'CREATE TABLE IF NOT EXISTS products (\n  id SERIAL PRIMARY KEY,\n  sku TEXT UNIQUE NOT NULL,\n  name TEXT,\n  price NUMERIC,\n  stock INT\n);\n\nCREATE OR REPLACE FUNCTION upsert_product(\n  p_sku   TEXT,\n  p_name  TEXT,\n  p_price NUMERIC,\n  p_stock INT\n) RETURNS INT AS $$\nBEGIN\n  -- your code here\nEND;\n$$ LANGUAGE plpgsql;', testCases: [] } },
+      ]},
     ],
   });
 
@@ -1874,6 +2419,9 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'MULTIPLE_CHOICE', title: 'React Native Bridge', body: 'In React Native, what is the purpose of the JavaScript Bridge (or the new Architecture\'s JSI)?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['react-native', 'architecture', 'bridge'], config: { options: [{ label: 'It converts JSX to native XML', value: 'A' }, { label: 'It enables communication between the JavaScript thread and the native UI thread', value: 'B' }, { label: 'It bundles JavaScript code for production', value: 'C' }, { label: 'It handles HTTP requests natively', value: 'D' }], correct: 'B', explanation: 'The Bridge (and JSI in the new architecture) enables async communication between JS and native code.' } },
         { type: 'SHORT_ANSWER', title: 'Performance Optimisation', body: 'List three common performance issues in React Native apps and how you would fix each one.', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['react-native', 'performance'], config: {} },
         { type: 'CODING_CHALLENGE', title: 'FlatList Optimisation', body: 'You have a FlatList displaying 10,000 items that is sluggish. Write an optimised FlatList implementation with proper key extraction, item layout, and memoisation to improve scroll performance.', points: 20, difficulty: 'hard', evaluator: 'code', skillTags: ['react-native', 'flatlist', 'performance'], config: { language: 'javascript', starterCode: 'import React, { memo } from "react";\nimport { FlatList, Text, View } from "react-native";\n\nconst ITEM_HEIGHT = 60;\n\n// Optimise this component\nexport function ProductList({ products }) {\n  return (\n    <FlatList\n      data={products}\n      renderItem={({ item }) => <View><Text>{item.name}</Text></View>}\n    />\n  );\n}', testCases: [] } },
+      ]},
+      { title: 'React Native Coding Challenges', questions: [
+        { type: 'CODING_CHALLENGE', title: 'Auth Navigation Flow', body: 'Implement a React Navigation v6 root navigator that shows an `AuthStack` (Login + Signup) when the user is not logged in, and a `MainStack` (Home + Profile + Settings tabs) when authenticated. Use a React Context or Zustand store for auth state. Handle the case where auth state is loading (show a splash screen).', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['react-native', 'navigation', 'auth', 'context'], config: { language: 'javascript', starterCode: 'import React from "react";\nimport { NavigationContainer } from "@react-navigation/native";\nimport { createNativeStackNavigator } from "@react-navigation/native-stack";\nimport { useAuth } from "./AuthContext"; // provides: { user, isLoading }\n\nconst Stack = createNativeStackNavigator();\n\nexport function AppNavigator() {\n  // render correct stack based on auth state\n  return null;\n}', testCases: [] } },
       ]},
     ],
   });
@@ -1889,14 +2437,17 @@ Design a robust error handling and alerting strategy for this integration:
         { type: 'SCENARIO', title: 'Requirements Gathering', body: 'You are the BA for a new expense management system. A stakeholder meeting reveals conflicting priorities between Finance (wants approval workflows) and HR (wants mobile-first). Describe how you would facilitate alignment, document requirements, and handle conflicts.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['requirements', 'stakeholder-management', 'ba'], config: { rubric: [{ criterion: 'Stakeholder identification and engagement approach', maxPoints: 7, guidance: '' }, { criterion: 'Requirements elicitation techniques', maxPoints: 6, guidance: '' }, { criterion: 'Conflict resolution strategy', maxPoints: 6, guidance: '' }, { criterion: 'Documentation approach (BRD, user stories, acceptance criteria)', maxPoints: 6, guidance: '' }] } },
         { type: 'SQL_CHALLENGE', title: 'Data Analysis with SQL', body: 'Using the tables `sales(id, product_id, region, amount, sale_date)` and `products(id, name, category)`, write a query to show the month-over-month revenue growth percentage for each product category in 2024.', points: 20, difficulty: 'hard', evaluator: 'sql', skillTags: ['sql', 'data-analysis', 'business-intelligence'], config: { schema: 'CREATE TABLE products (id INT, name VARCHAR, category VARCHAR);\nCREATE TABLE sales (id INT, product_id INT, region VARCHAR, amount DECIMAL, sale_date DATE);', expectedSql: 'WITH monthly AS (SELECT DATE_FORMAT(sale_date, "%Y-%m") as month, p.category, SUM(amount) as revenue FROM sales s JOIN products p ON s.product_id = p.id WHERE YEAR(sale_date) = 2024 GROUP BY month, p.category) SELECT category, month, revenue, LAG(revenue) OVER (PARTITION BY category ORDER BY month) as prev_revenue, ROUND((revenue - LAG(revenue) OVER (PARTITION BY category ORDER BY month)) / LAG(revenue) OVER (PARTITION BY category ORDER BY month) * 100, 1) as growth_pct FROM monthly' } },
       ]},
+      { title: 'Technical Coding Challenges', questions: [
+        { type: 'SQL_CHALLENGE', title: 'Conversion Funnel Analysis', body: 'Using `user_events(user_id, event_name, created_at)` with events `page_view`, `add_to_cart`, `checkout_start`, `purchase_complete`, write a SQL query showing the count of distinct users and the conversion rate (%) at each funnel step for the last 30 days.', points: 20, difficulty: 'medium', evaluator: 'sql', skillTags: ['sql', 'funnel-analysis', 'business-intelligence'], config: { schema: 'CREATE TABLE user_events (\n  user_id INT,\n  event_name VARCHAR(50),\n  created_at TIMESTAMP\n);', expectedSql: 'WITH steps AS (\n  SELECT \'1_page_view\' AS step, COUNT(DISTINCT user_id) AS users FROM user_events WHERE event_name = \'page_view\' AND created_at >= NOW() - INTERVAL \'30 days\'\n  UNION ALL SELECT \'2_add_to_cart\', COUNT(DISTINCT user_id) FROM user_events WHERE event_name = \'add_to_cart\' AND created_at >= NOW() - INTERVAL \'30 days\'\n  UNION ALL SELECT \'3_checkout_start\', COUNT(DISTINCT user_id) FROM user_events WHERE event_name = \'checkout_start\' AND created_at >= NOW() - INTERVAL \'30 days\'\n  UNION ALL SELECT \'4_purchase_complete\', COUNT(DISTINCT user_id) FROM user_events WHERE event_name = \'purchase_complete\' AND created_at >= NOW() - INTERVAL \'30 days\'\n)\nSELECT step, users, ROUND(100.0 * users / NULLIF(LAG(users) OVER (ORDER BY step), 0), 1) AS conversion_pct FROM steps;' } },
+      ]},
     ],
   });
 
   console.log('✅ Seeding complete!');
   console.log('');
   console.log('── Demo Login Credentials ─────────────────────────────────');
-  console.log('  Admin:     admin@screenstack.io     / admin123');
-  console.log('  Recruiter: recruiter@screenstack.io / recruiter123');
+  console.log('  Admin:     admin@skillio.io     / admin123');
+  console.log('  Recruiter: recruiter@skillio.io / recruiter123');
   console.log('───────────────────────────────────────────────────────────');
   console.log('  32 starter assessment templates created.');
   console.log('  Start the app: npm run dev → http://localhost:3000');

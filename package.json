@@ -1,5 +1,5 @@
 {
-  "name": "screenstack",
+  "name": "skillio",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -28,6 +28,9 @@
     "recharts": "^2.12.1",
     "uuid": "^9.0.0",
     "zod": "^3.22.4"
+  },
+  "prisma": {
+    "seed": "ts-node --project tsconfig.seed.json prisma/seed.ts"
   },
   "devDependencies": {
     "@types/node": "^20.11.28",

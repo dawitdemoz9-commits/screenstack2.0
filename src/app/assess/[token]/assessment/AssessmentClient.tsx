@@ -79,7 +79,11 @@ export default function AssessmentClient({
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const [saveStatus, setSaveStatus]       = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const [violationCount, setViolationCount] = useState(0);
+  const [integrityWarning, setIntegrityWarning] = useState('');
+  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false);
+  const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const autoSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -142,6 +146,14 @@ export default function AssessmentClient({
   useEffect(() => {
     if (!assessment?.monitoringEnabled || !attemptId) return;
 
+    // Show a timed warning banner to the candidate
+    function showWarning(msg: string) {
+      setIntegrityWarning(msg);
+      setViolationCount((c) => c + 1);
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+      warningTimerRef.current = setTimeout(() => setIntegrityWarning(''), 6000);
+    }
+
     function send(type: string, metadata?: Record<string, unknown>) {
       fetch('/api/monitoring', {
         method: 'POST',
@@ -156,19 +168,62 @@ export default function AssessmentClient({
       }).catch(() => {/* monitoring failures are silent */});
     }
 
-    const onHide  = () => send(document.visibilityState === 'hidden' ? 'page_hidden' : 'page_visible');
-    const onBlur  = () => send('window_blur');
+    // Tab / visibility change
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') {
+        send('page_hidden');
+        showWarning('⚠ Tab switch detected and logged. Please stay on this page.');
+      } else {
+        send('page_visible');
+      }
+    };
+
+    // Window focus
+    const onBlur  = () => { send('window_blur');  showWarning('⚠ Window focus lost. This has been logged.'); };
     const onFocus = () => send('window_focus');
-    const onCopy  = () => send('copy');
+
+    // Copy — blocked + logged
+    const onCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      send('copy');
+      showWarning('⚠ Copy is disabled during assessments. Attempt logged.');
+    };
+
+    // Paste — blocked + logged
     const onPaste = (e: ClipboardEvent) => {
+      e.preventDefault();
       const text = e.clipboardData?.getData('text') || '';
       send(text.length > 200 ? 'large_paste' : 'paste', { length: text.length });
+      showWarning('⚠ Paste is disabled during assessments. Attempt logged.');
     };
-    const onCtx   = () => send('right_click');
+
+    // Right-click — blocked + logged
+    const onCtx = (e: MouseEvent) => {
+      e.preventDefault();
+      send('right_click');
+    };
+
+    // Keyboard shortcuts Ctrl/Cmd+C and Ctrl/Cmd+V — blocked + logged
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'c' || e.key === 'C') {
+          e.preventDefault();
+          send('copy');
+          showWarning('⚠ Copy shortcut blocked. Attempt logged.');
+        } else if (e.key === 'v' || e.key === 'V') {
+          e.preventDefault();
+          send('paste');
+          showWarning('⚠ Paste shortcut blocked. Attempt logged.');
+        }
+      }
+    };
 
     // Fullscreen exit
     const onFullscreen = () => {
-      if (!document.fullscreenElement) send('fullscreen_exit');
+      if (!document.fullscreenElement) {
+        send('fullscreen_exit');
+        showWarning('⚠ You exited fullscreen. Please re-enter fullscreen mode.');
+      }
     };
 
     // Network events
@@ -192,9 +247,13 @@ export default function AssessmentClient({
     document.addEventListener('copy',            onCopy);
     document.addEventListener('paste',           onPaste);
     document.addEventListener('contextmenu',     onCtx);
+    document.addEventListener('keydown',         onKeydown);
     document.addEventListener('fullscreenchange',onFullscreen);
     window.addEventListener('offline',           onOffline);
     window.addEventListener('online',            onOnline);
+
+    // Prompt fullscreen on first load
+    setShowFullscreenPrompt(true);
 
     return () => {
       document.removeEventListener('visibilitychange', onHide);
@@ -203,11 +262,14 @@ export default function AssessmentClient({
       document.removeEventListener('copy',            onCopy);
       document.removeEventListener('paste',           onPaste);
       document.removeEventListener('contextmenu',     onCtx);
+      document.removeEventListener('keydown',         onKeydown);
       document.removeEventListener('fullscreenchange',onFullscreen);
       window.removeEventListener('offline',           onOffline);
       window.removeEventListener('online',            onOnline);
       clearInterval(devToolsInterval);
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assessment?.monitoringEnabled, attemptId, accessToken]);
 
   // ── Autosave every 30s ─────────────────────────────────────────────────────
@@ -359,6 +421,50 @@ export default function AssessmentClient({
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
 
+      {/* ── Fullscreen enforcement prompt ────────────────────────────────── */}
+      {showFullscreenPrompt && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
+            <div className="text-4xl mb-4">🖥</div>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Enter Fullscreen Mode</h2>
+            <p className="text-gray-500 text-sm mb-6">
+              This assessment is monitored. Please enter fullscreen mode to continue.
+              Exiting fullscreen will be logged as an integrity event.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  document.documentElement.requestFullscreen?.().catch(() => {});
+                  setShowFullscreenPrompt(false);
+                }}
+              >
+                Enter Fullscreen
+              </button>
+              <button
+                className="btn-secondary text-sm"
+                onClick={() => setShowFullscreenPrompt(false)}
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Integrity warning banner ─────────────────────────────────────── */}
+      {integrityWarning && (
+        <div className="bg-red-600 text-white text-center py-2.5 px-4 text-sm font-medium flex-shrink-0 flex items-center justify-center gap-2">
+          {integrityWarning}
+          <button
+            onClick={() => setIntegrityWarning('')}
+            className="ml-2 text-red-200 hover:text-white text-xs underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
         <div>
@@ -371,10 +477,18 @@ export default function AssessmentClient({
         </div>
         <div className="flex items-center gap-4">
           {assessment.monitoringEnabled && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full"
-              title="Integrity monitoring is active. Tab switches, copy/paste, and other events are being logged.">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-              Monitored
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full"
+                title="Integrity monitoring is active. Tab switches, copy/paste, and other events are being logged.">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+                Monitored
+              </div>
+              {violationCount > 0 && (
+                <div className="flex items-center gap-1 text-xs text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded-full font-medium"
+                  title="Number of integrity violations logged this session">
+                  ⚠ {violationCount} flag{violationCount !== 1 ? 's' : ''}
+                </div>
+              )}
             </div>
           )}
           <div className={`font-mono text-xl font-bold tabular-nums ${isLow ? 'text-red-600 animate-pulse' : 'text-gray-800'}`}>

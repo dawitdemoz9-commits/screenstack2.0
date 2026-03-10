@@ -60,15 +60,20 @@ export default function ReportClient({ attempt }: { attempt: Attempt }) {
     setTimeout(() => setSaved(false), 2000);
   }
 
-  async function scoreResponse(responseId: string) {
+  async function scoreResponse(responseId: string, maxScore: number) {
     const entry = manualScores[responseId];
     if (!entry) return;
+    const score = parseFloat(entry.score);
+    if (isNaN(score) || score < 0 || score > maxScore) {
+      alert(`Score must be between 0 and ${maxScore}.`);
+      return;
+    }
     await fetch(`/api/admin/reports/${attempt.id}/score-response`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         responseId,
-        score: parseFloat(entry.score) || 0,
+        score,
         feedback: entry.feedback,
       }),
     });
@@ -187,7 +192,7 @@ export default function ReportClient({ attempt }: { attempt: Attempt }) {
                           ...prev, [r.id]: { ...prev[r.id], feedback: e.target.value }
                         }))}
                       />
-                      <button className="btn-primary text-sm" onClick={() => scoreResponse(r.id)}>
+                      <button className="btn-primary text-sm" onClick={() => scoreResponse(r.id, r.maxScore)}>
                         Save Score
                       </button>
                     </div>
@@ -205,6 +210,53 @@ export default function ReportClient({ attempt }: { attempt: Attempt }) {
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 print:hidden">
           <strong>Important:</strong> These events are integrity signals, not proof of misconduct. Common causes include accidental window switches, browser notifications, or network issues. Use your professional judgement.
         </div>
+
+        {/* Integrity Flags Summary */}
+        {attempt.monitoringEvents.length > 0 && (() => {
+          const counts: Record<string, number> = {};
+          for (const ev of attempt.monitoringEvents) {
+            counts[ev.eventType] = (counts[ev.eventType] || 0) + 1;
+          }
+          const flagTypes = [
+            { key: 'page_hidden',    label: 'Tab switches'     },
+            { key: 'window_blur',    label: 'Focus losses'     },
+            { key: 'copy',           label: 'Copy attempts'    },
+            { key: 'paste',          label: 'Paste attempts'   },
+            { key: 'large_paste',    label: 'Large pastes'     },
+            { key: 'right_click',    label: 'Right-click attempts' },
+            { key: 'fullscreen_exit',label: 'Fullscreen exits' },
+            { key: 'devtools_open',  label: 'DevTools detections' },
+            { key: 'network_disconnect', label: 'Network drops' },
+          ].filter((f) => counts[f.key]);
+          const totalFlagged = attempt.monitoringEvents.filter((e) =>
+            ['page_hidden','window_blur','copy','paste','large_paste','right_click','fullscreen_exit','devtools_open'].includes(e.eventType)
+          ).length;
+
+          return (
+            <div className={`mb-6 card p-5 ${totalFlagged > 5 ? 'border-red-300 bg-red-50' : totalFlagged > 0 ? 'border-orange-200 bg-orange-50' : ''}`}>
+              <h3 className="font-semibold text-gray-900 mb-3 text-sm">
+                Candidate Integrity Flags
+                {totalFlagged > 0 && (
+                  <span className={`ml-2 badge text-xs ${totalFlagged > 5 ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                    {totalFlagged} total flags
+                  </span>
+                )}
+              </h3>
+              {flagTypes.length === 0 ? (
+                <p className="text-sm text-green-700">No suspicious events detected.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {flagTypes.map((f) => (
+                    <div key={f.key} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-gray-200">
+                      <span className="text-xs text-gray-600">{f.label}</span>
+                      <span className="text-xs font-bold text-red-600 ml-2">{counts[f.key]}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {attempt.monitoringEvents.length === 0 ? (
           <p className="text-gray-400 text-center py-8">No monitoring events recorded.</p>

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'ScreenStack — Technical Assessment Platform',
+  title: 'Skillio — Technical Assessment Platform',
   description: 'Send candidates a secure link to complete technical assessments.',
 };
 

@@ -63,7 +63,7 @@ export default function InvitesClient({
       if (!res.ok) { setError(data.error || 'Failed to send invite'); return; }
       setGeneratedLink(data.assessmentLink);
       setInvites([data.invite, ...invites]);
-      setForm({ ...form, candidateName: '', candidateEmail: '', message: '' });
+      setForm({ ...form, assessmentId: '', candidateName: '', candidateEmail: '', message: '' });
     } catch { setError('Network error.'); }
     finally { setSaving(false); }
   }

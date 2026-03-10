@@ -24,6 +24,11 @@ export async function POST(
 
   if (!source) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
+  // Non-template assessments can only be cloned by their owner (templates are public)
+  if (!source.isTemplate && source.createdById !== user.id && user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   const clone = await prisma.assessment.create({
     data: {
       title:             `${source.title} (Copy)`,

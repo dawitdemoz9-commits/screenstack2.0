@@ -1,5 +1,5 @@
 /**
- * ScreenStack — Code Execution Sandbox
+ * Skillio — Code Execution Sandbox
  *
  * ARCHITECTURE:
  * Candidate code NEVER runs on the main Next.js application server.
