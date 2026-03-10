@@ -21,10 +21,11 @@ export default async function InvitesPage({
         createdById: user?.role === 'ADMIN' ? undefined : user?.id,
         ...(sp.assessment ? { assessmentId: sp.assessment } : {}),
       },
-      include: {
+      select: {
+        id: true, status: true, createdAt: true, expiresAt: true, accessToken: true,
         candidate:  { select: { name: true, email: true } },
         assessment: { select: { title: true, roleType: true } },
-        attempt: { select: { id: true, status: true, score: true, passed: true, suspicionScore: true } },
+        attempt: { select: { id: true, status: true, score: true, maxScore: true, passed: true, suspicionScore: true } },
       },
       orderBy: { createdAt: 'desc' },
     }),

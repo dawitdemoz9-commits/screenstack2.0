@@ -10,7 +10,7 @@ interface Invite {
   candidate: { name: string; email: string };
   assessment: { title: string; roleType: string };
   attempt: Attempt | null;
-  token: string;
+  accessToken: string | null;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -193,7 +193,7 @@ export default function InvitesClient({
                       <button
                         className="text-xs text-brand-600 hover:underline"
                         onClick={() => {
-                          const link = `${APP_URL}/assess/${inv.id}?t=${inv.token}`;
+                          const link = `${APP_URL}/assess/${inv.id}?t=${inv.accessToken}`;
                           copyLink(link, inv.id);
                         }}
                       >
