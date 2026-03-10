@@ -58,7 +58,7 @@ export async function POST(
               evaluator:   q.evaluator,
               skillTags:   q.skillTags,
               orderIndex:  q.orderIndex,
-              config:      q.config,
+              config:      q.config as never,
               platform:    q.platform,
             })),
           },
