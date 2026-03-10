@@ -23,6 +23,35 @@ const questionSchema = z.object({
   platform:     z.string().optional(),
 });
 
+export async function GET(req: NextRequest) {
+  const user = await getAuthUser();
+  if (!user) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+
+  const { searchParams } = new URL(req.url);
+  const search     = searchParams.get('search') || '';
+  const difficulty = searchParams.get('difficulty') || '';
+  const type       = searchParams.get('type') || '';
+  const platform   = searchParams.get('platform') || '';
+
+  const questions = await prisma.question.findMany({
+    where: {
+      ...(search ? { OR: [
+        { title: { contains: search, mode: 'insensitive' } },
+        { body:  { contains: search, mode: 'insensitive' } },
+      ]} : {}),
+      ...(difficulty ? { difficulty } : {}),
+      ...(type ? { type: type as never } : {}),
+      ...(platform ? { platform } : {}),
+      section: { assessment: { isTemplate: true } },
+    },
+    include: { section: { include: { assessment: { select: { title: true, roleType: true } } } } },
+    orderBy: { createdAt: 'asc' },
+    take: 100,
+  });
+
+  return NextResponse.json({ questions });
+}
+
 export async function POST(req: NextRequest) {
   const user = await getAuthUser();
   if (!user) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { verifyInviteToken } from '@/lib/auth';
 import { evaluate } from '@/lib/evaluators';
+import { createNotification } from '@/lib/notifications';
 
 const schema = z.object({
   accessToken: z.string(),
@@ -169,6 +170,31 @@ export async function POST(
       where: { id: attempt.inviteId },
       data: { status: 'COMPLETED' },
     });
+
+    // Notify the recruiter who sent the invite
+    try {
+      const invite = await prisma.invite.findUnique({
+        where: { id: attempt.inviteId },
+        select: { createdById: true },
+      });
+      if (invite) {
+        const candidate = await prisma.candidate.findUnique({
+          where: { id: attempt.candidateId },
+          select: { name: true },
+        });
+        const assessment = await prisma.assessment.findUnique({
+          where: { id: attempt.assessmentId },
+          select: { title: true },
+        });
+        await createNotification({
+          userId: invite.createdById,
+          type: 'attempt_completed',
+          title: 'Assessment Completed',
+          body: `${candidate?.name ?? 'A candidate'} has completed "${assessment?.title ?? 'an assessment'}" with a score of ${Math.round(pct)}%`,
+          metadata: { attemptId, candidateName: candidate?.name, assessmentTitle: assessment?.title, score: Math.round(pct), passed: pct >= 70 },
+        });
+      }
+    } catch { /* notification failure must not break submission */ }
 
     return NextResponse.json({ attempt: updated, score: totalScore, maxScore, pct });
   } catch (err) {

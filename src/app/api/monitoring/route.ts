@@ -4,6 +4,7 @@ import { logMonitoringEvent } from '@/lib/monitoring';
 import { verifyInviteToken } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { createNotification } from '@/lib/notifications';
 
 const eventSchema = z.object({
   attemptId:   z.string(),
@@ -44,6 +45,30 @@ export async function POST(req: NextRequest) {
       metadata:  body.metadata,
       timestamp: body.timestamp,
     });
+
+    // Check if suspicion just crossed the alert threshold (50)
+    try {
+      const updatedAttempt = await prisma.attempt.findUnique({
+        where: { id: body.attemptId },
+        select: { suspicionScore: true, flaggedEventCount: true, candidateId: true, assessmentId: true, inviteId: true },
+      });
+      const THRESHOLD = 50;
+      if (updatedAttempt && updatedAttempt.suspicionScore >= THRESHOLD && updatedAttempt.flaggedEventCount === 1) {
+        // flaggedEventCount===1 means this is the first flagged event, so we notify once
+        const invite = await prisma.invite.findUnique({ where: { id: updatedAttempt.inviteId }, select: { createdById: true } });
+        if (invite) {
+          const candidate = await prisma.candidate.findUnique({ where: { id: updatedAttempt.candidateId }, select: { name: true } });
+          const assessment = await prisma.assessment.findUnique({ where: { id: updatedAttempt.assessmentId }, select: { title: true } });
+          await createNotification({
+            userId: invite.createdById,
+            type: 'high_suspicion',
+            title: '⚠ Suspicious Activity Detected',
+            body: `${candidate?.name ?? 'A candidate'} triggered integrity alerts during "${assessment?.title ?? 'an assessment'}" (suspicion score: ${Math.round(updatedAttempt.suspicionScore)})`,
+            metadata: { attemptId: body.attemptId, suspicionScore: updatedAttempt.suspicionScore },
+          });
+        }
+      }
+    } catch { /* never surface monitoring errors */ }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 interface Question {
   id: string; type: string; title: string; body: string;
@@ -188,6 +188,7 @@ function AddQuestionInline({
   questionCount: number;
 }) {
   const [open, setOpen] = useState(false);
+  const [bankOpen, setBankOpen] = useState(false);
   const [type, setType] = useState('MULTIPLE_CHOICE');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -227,12 +228,21 @@ function AddQuestionInline({
     setSaving(false);
   }
 
-  if (!open) {
+  if (!open && !bankOpen) {
     return (
-      <button className="text-sm text-brand-600 hover:underline" onClick={() => setOpen(true)}>
-        + Add Question
-      </button>
+      <div className="flex gap-4">
+        <button className="text-sm text-brand-600 hover:underline" onClick={() => setOpen(true)}>
+          + Add Question
+        </button>
+        <button className="text-sm text-purple-600 hover:underline" onClick={() => setBankOpen(true)}>
+          Browse Question Bank
+        </button>
+      </div>
     );
+  }
+
+  if (bankOpen) {
+    return <QuestionBankPicker sectionId={sectionId} questionCount={questionCount} onAdded={(q) => { onAdded(q); setBankOpen(false); }} onClose={() => setBankOpen(false)} />;
   }
 
   return (
@@ -293,6 +303,135 @@ function AddQuestionInline({
           {saving ? 'Saving…' : 'Save Question'}
         </button>
         <button className="btn-secondary text-sm" onClick={() => setOpen(false)}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Question Bank Picker ─────────────────────────────────────────────────────
+
+interface BankQuestion {
+  id: string; type: string; title: string; body: string; points: number;
+  difficulty: string; evaluator: string; skillTags: string[];
+  section: { assessment: { title: string; roleType: string } };
+}
+
+function QuestionBankPicker({ sectionId, questionCount, onAdded, onClose }: {
+  sectionId: string;
+  questionCount: number;
+  onAdded: (q: Question) => void;
+  onClose: () => void;
+}) {
+  const [questions, setQuestions] = useState<BankQuestion[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+
+  const fetchQuestions = useCallback(async (q: string) => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (q) params.set('search', q);
+    const res = await fetch('/api/admin/questions?' + params);
+    if (res.ok) {
+      const data = await res.json();
+      setQuestions(data.questions);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchQuestions(''); }, [fetchQuestions]);
+
+  async function importSelected() {
+    setImporting(true);
+    const toImport = questions.filter((q) => selected.has(q.id));
+    let lastAdded: Question | null = null;
+    for (let i = 0; i < toImport.length; i++) {
+      const q = toImport[i];
+      const res = await fetch('/api/admin/questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sectionId,
+          type: q.type,
+          title: q.title,
+          body: q.body,
+          points: q.points,
+          difficulty: q.difficulty,
+          evaluator: q.evaluator,
+          skillTags: q.skillTags,
+          orderIndex: questionCount + i,
+          config: {},
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        lastAdded = data.question;
+        onAdded(data.question);
+      }
+    }
+    setImporting(false);
+    if (lastAdded) onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="font-semibold text-gray-900">Browse Question Bank</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div className="px-6 py-3 border-b border-gray-100">
+          <input
+            className="input text-sm w-full"
+            placeholder="Search questions…"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); fetchQuestions(e.target.value); }}
+          />
+        </div>
+        <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+          {loading ? (
+            <div className="px-6 py-8 text-center text-gray-400 text-sm">Loading…</div>
+          ) : questions.length === 0 ? (
+            <div className="px-6 py-8 text-center text-gray-400 text-sm">No questions found</div>
+          ) : questions.map((q) => (
+            <label key={q.id} className="flex items-start gap-3 px-6 py-3 hover:bg-gray-50 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1 w-4 h-4 text-brand-600"
+                checked={selected.has(q.id)}
+                onChange={(e) => {
+                  const next = new Set(selected);
+                  e.target.checked ? next.add(q.id) : next.delete(q.id);
+                  setSelected(next);
+                }}
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="badge bg-gray-100 text-gray-600 text-xs">{QUESTION_TYPE_LABELS[q.type] || q.type}</span>
+                  <span className={`badge text-xs ${DIFFICULTY_COLORS[q.difficulty] || ''}`}>{q.difficulty}</span>
+                  <span className="text-xs text-gray-400">{q.section.assessment.title}</span>
+                </div>
+                <p className="text-sm font-medium text-gray-900">{q.title}</p>
+                <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{q.body}</p>
+              </div>
+              <span className="text-xs text-gray-500 whitespace-nowrap">{q.points} pts</span>
+            </label>
+          ))}
+        </div>
+        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+          <span className="text-sm text-gray-500">{selected.size} selected</span>
+          <div className="flex gap-3">
+            <button className="btn-secondary text-sm" onClick={onClose}>Cancel</button>
+            <button
+              className="btn-primary text-sm"
+              onClick={importSelected}
+              disabled={selected.size === 0 || importing}
+            >
+              {importing ? 'Importing…' : `Import ${selected.size} Question${selected.size !== 1 ? 's' : ''}`}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

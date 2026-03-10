@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import NotificationBell from './NotificationBell';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -80,6 +81,7 @@ export default function AdminLayout({ children, user }: Props) {
       <aside className="w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -88,6 +90,8 @@ export default function AdminLayout({ children, user }: Props) {
               </svg>
             </div>
             <span className="font-bold text-gray-900 text-lg">ScreenStack</span>
+          </div>
+          <NotificationBell />
           </div>
         </div>
 

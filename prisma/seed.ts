@@ -1478,13 +1478,251 @@ Design a robust error handling and alerting strategy for this integration:
     ],
   });
 
+  // ── New Role Templates ────────────────────────────────────────────────────
+
+  await createAssessment(admin.id, {
+    title: 'Java Backend Developer Assessment',
+    description: 'Tests core Java, Spring Boot, OOP, concurrency, and API design.',
+    roleType: 'java-developer',
+    instructions: 'Answer all questions. Coding questions may be in Java.',
+    timeLimit: 75, passingScore: 70,
+    templateSlug: 'java-developer-starter',
+    sections: [
+      {
+        title: 'Core Java',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'Java Memory Model', body: 'Which area of JVM memory stores class-level static variables?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['java', 'jvm', 'memory'], config: { options: [{ label: 'Heap', value: 'A' }, { label: 'Stack', value: 'B' }, { label: 'Method Area (Metaspace)', value: 'C' }, { label: 'Code Cache', value: 'D' }], correct: 'C', explanation: 'Static variables live in the Method Area / Metaspace.' } },
+          { type: 'MULTIPLE_CHOICE', title: 'Checked vs Unchecked Exceptions', body: 'Which of the following is a checked exception?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['java', 'exceptions'], config: { options: [{ label: 'NullPointerException', value: 'A' }, { label: 'IOException', value: 'B' }, { label: 'ArrayIndexOutOfBoundsException', value: 'C' }, { label: 'ClassCastException', value: 'D' }], correct: 'B', explanation: 'IOException is a checked exception that must be declared or caught.' } },
+          { type: 'CODING_CHALLENGE', title: 'Reverse a Linked List', body: 'Implement a method to reverse a singly linked list in Java.\n\nReturn the new head node.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['java', 'data-structures', 'linked-list'], config: { language: 'java', starterCode: 'class Solution {\n    public ListNode reverseList(ListNode head) {\n        // your code here\n    }\n}', testCases: [] } },
+        ],
+      },
+      {
+        title: 'Spring Boot & REST APIs',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'Spring Bean Scope', body: 'What is the default scope of a Spring bean?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['spring', 'beans'], config: { options: [{ label: 'Prototype', value: 'A' }, { label: 'Singleton', value: 'B' }, { label: 'Request', value: 'C' }, { label: 'Session', value: 'D' }], correct: 'B', explanation: 'Spring beans are singleton by default — one instance per application context.' } },
+          { type: 'SHORT_ANSWER', title: 'Explain @Transactional', body: 'What does @Transactional do in Spring, and when would you use it?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['spring', 'transactions', 'database'], config: {} },
+          { type: 'SCENARIO', title: 'Design a REST API for User Management', body: 'Design RESTful endpoints for a User Management service (CRUD operations). Include HTTP methods, URL patterns, request/response shapes, and status codes.', points: 20, difficulty: 'hard', evaluator: 'manual', skillTags: ['rest', 'api-design', 'spring'], config: { rubric: [{ criterion: 'Correct HTTP verbs (GET/POST/PUT/DELETE)', maxPoints: 5, guidance: '' }, { criterion: 'Proper URL structure (/users, /users/{id})', maxPoints: 5, guidance: '' }, { criterion: 'Meaningful status codes (201, 404, 400)', maxPoints: 5, guidance: '' }, { criterion: 'Request/response body design', maxPoints: 5, guidance: '' }] } },
+        ],
+      },
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'C# / .NET Developer Assessment',
+    description: 'Tests C#, ASP.NET Core, LINQ, async/await, and .NET best practices.',
+    roleType: 'dotnet-developer',
+    instructions: 'Complete all sections. Coding answers should use C#.',
+    timeLimit: 75, passingScore: 70,
+    templateSlug: 'dotnet-developer-starter',
+    sections: [
+      {
+        title: 'C# Fundamentals',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'Value vs Reference Types', body: 'Which of the following is a value type in C#?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['csharp', 'types'], config: { options: [{ label: 'string', value: 'A' }, { label: 'int', value: 'B' }, { label: 'List<T>', value: 'C' }, { label: 'object', value: 'D' }], correct: 'B', explanation: 'int is a struct (value type). string is a reference type despite immutable behaviour.' } },
+          { type: 'MULTIPLE_CHOICE', title: 'async/await', body: 'What does `await` do when used with a Task?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['csharp', 'async'], config: { options: [{ label: 'Blocks the current thread until the Task completes', value: 'A' }, { label: 'Returns control to the caller and resumes after the Task completes', value: 'B' }, { label: 'Creates a new thread', value: 'C' }, { label: 'Cancels the Task', value: 'D' }], correct: 'B', explanation: 'await suspends the method without blocking the thread, resuming on completion.' } },
+          { type: 'CODING_CHALLENGE', title: 'LINQ Query', body: 'Given a list of integers, use LINQ to return the distinct even numbers sorted in descending order.\n\n```csharp\nList<int> numbers = new List<int> { 5, 2, 8, 2, 3, 8, 1, 6 };\n```', points: 15, difficulty: 'medium', evaluator: 'code', skillTags: ['csharp', 'linq'], config: { language: 'csharp', starterCode: 'using System.Linq;\nvar result = numbers\n    // your LINQ here\n    ;', testCases: [] } },
+        ],
+      },
+      {
+        title: 'ASP.NET Core & Architecture',
+        questions: [
+          { type: 'SHORT_ANSWER', title: 'Dependency Injection in .NET', body: 'Explain how dependency injection works in ASP.NET Core. What are the three service lifetimes?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['dotnet', 'di', 'aspnet'], config: {} },
+          { type: 'SCENARIO', title: 'Design a Middleware Pipeline', body: 'You need to add logging, authentication, and exception handling to an ASP.NET Core app. Describe the middleware order and why it matters.', points: 20, difficulty: 'hard', evaluator: 'manual', skillTags: ['aspnet', 'middleware', 'architecture'], config: { rubric: [{ criterion: 'Correct middleware order (exception handling first)', maxPoints: 7, guidance: '' }, { criterion: 'Explains why order matters for request/response pipeline', maxPoints: 7, guidance: '' }, { criterion: 'Mentions UseAuthentication before UseAuthorization', maxPoints: 6, guidance: '' }] } },
+        ],
+      },
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'Azure Cloud Engineer Assessment',
+    description: 'Tests Azure services, architecture, IaC, and cloud-native patterns.',
+    roleType: 'azure-engineer',
+    instructions: 'Answer all questions based on Microsoft Azure.',
+    timeLimit: 60, passingScore: 70,
+    templateSlug: 'azure-engineer-starter',
+    sections: [
+      {
+        title: 'Azure Core Services',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'Azure Storage Types', body: 'Which Azure storage service is best suited for storing unstructured blob data like images and videos?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['azure', 'storage'], config: { options: [{ label: 'Azure SQL Database', value: 'A' }, { label: 'Azure Blob Storage', value: 'B' }, { label: 'Azure Table Storage', value: 'C' }, { label: 'Azure Queue Storage', value: 'D' }], correct: 'B', explanation: 'Azure Blob Storage is optimised for large-scale unstructured binary data.' } },
+          { type: 'MULTIPLE_CHOICE', title: 'Azure Functions Trigger', body: 'Which trigger type causes an Azure Function to run on a schedule?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['azure', 'functions', 'serverless'], config: { options: [{ label: 'HTTP Trigger', value: 'A' }, { label: 'Timer Trigger', value: 'B' }, { label: 'Queue Trigger', value: 'C' }, { label: 'Blob Trigger', value: 'D' }], correct: 'B', explanation: 'Timer Trigger uses a CRON expression to schedule execution.' } },
+          { type: 'SHORT_ANSWER', title: 'Azure Active Directory vs Entra ID', body: 'What is Microsoft Entra ID (formerly Azure AD) and how is it used for authentication in Azure applications?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['azure', 'identity', 'security'], config: {} },
+        ],
+      },
+      {
+        title: 'Architecture & IaC',
+        questions: [
+          { type: 'SCENARIO', title: 'Design a Highly Available Web App on Azure', body: 'Design an Azure architecture for a web application that requires 99.9% uptime, auto-scaling, and a managed database. Include the Azure services you would use and why.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['azure', 'architecture', 'high-availability'], config: { rubric: [{ criterion: 'Uses App Service or AKS for hosting with auto-scale', maxPoints: 7, guidance: '' }, { criterion: 'Includes Azure SQL / Cosmos DB with geo-redundancy', maxPoints: 6, guidance: '' }, { criterion: 'Front Door or Application Gateway for load balancing', maxPoints: 6, guidance: '' }, { criterion: 'Mentions Azure Monitor / Application Insights', maxPoints: 6, guidance: '' }] } },
+          { type: 'SHORT_ANSWER', title: 'Bicep vs Terraform for Azure IaC', body: 'Compare Azure Bicep and Terraform for infrastructure as code. When would you choose one over the other?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['azure', 'iac', 'terraform', 'bicep'], config: {} },
+        ],
+      },
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'Ruby on Rails Developer Assessment',
+    description: 'Tests Ruby language fundamentals, Rails conventions, ActiveRecord, and API design.',
+    roleType: 'rails-developer',
+    instructions: 'Answer all questions. Code should be written in Ruby.',
+    timeLimit: 60, passingScore: 70,
+    templateSlug: 'rails-developer-starter',
+    sections: [
+      {
+        title: 'Ruby & Rails Fundamentals',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'ActiveRecord Associations', body: 'A User `has_many :posts` and a Post `belongs_to :user`. Which query fetches all posts for a user without N+1 queries?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['rails', 'activerecord', 'n+1'], config: { options: [{ label: 'User.all.map { |u| u.posts }', value: 'A' }, { label: 'User.includes(:posts).all', value: 'B' }, { label: 'Post.where(user_id: User.all)', value: 'C' }, { label: 'User.joins(:posts)', value: 'D' }], correct: 'B', explanation: 'includes eager-loads associations to prevent N+1.' } },
+          { type: 'CODING_CHALLENGE', title: 'Ruby Enumerable', body: 'Given an array of hashes representing products, use Ruby to return the names of all products with a price > 100, sorted alphabetically.\n\n```ruby\nproducts = [\n  { name: "Widget", price: 50 },\n  { name: "Gadget", price: 150 },\n  { name: "Doohickey", price: 200 }\n]\n```', points: 15, difficulty: 'easy', evaluator: 'code', skillTags: ['ruby', 'enumerable'], config: { language: 'ruby', starterCode: '# Return array of names\ndef expensive_products(products)\n  # your code\nend', testCases: [] } },
+          { type: 'SHORT_ANSWER', title: 'Rails Middleware and Rack', body: 'What is Rack in Rails? How would you add custom middleware to a Rails application?', points: 15, difficulty: 'hard', evaluator: 'manual', skillTags: ['rails', 'rack', 'middleware'], config: {} },
+        ],
+      },
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'DevOps Engineer Assessment',
+    description: 'Tests CI/CD, containers, Kubernetes, infrastructure as code, and SRE practices.',
+    roleType: 'devops-engineer',
+    instructions: 'Answer all sections. Focus on practical, production-ready approaches.',
+    timeLimit: 75, passingScore: 70,
+    templateSlug: 'devops-engineer-starter',
+    sections: [
+      {
+        title: 'CI/CD & Containers',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'Docker Layer Caching', body: 'To optimise Docker build caching, where should you copy package.json and run npm install relative to copying the rest of the source code?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['docker', 'ci-cd', 'caching'], config: { options: [{ label: 'After copying all source files', value: 'A' }, { label: 'Before copying the rest of source files', value: 'B' }, { label: 'In a separate stage using multi-stage build', value: 'C' }, { label: 'Order does not matter', value: 'D' }], correct: 'B', explanation: 'Copying package files first and installing deps before the rest of the source maximises cache reuse.' } },
+          { type: 'SCENARIO', title: 'Design a CI/CD Pipeline', body: 'Design a CI/CD pipeline for a Node.js microservice that needs: automated tests, Docker build, security scanning, and deployment to Kubernetes on merge to main. Describe each stage and tooling choices.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['ci-cd', 'kubernetes', 'devops'], config: { rubric: [{ criterion: 'Test stage with lint and unit tests', maxPoints: 6, guidance: '' }, { criterion: 'Docker build and push to registry', maxPoints: 6, guidance: '' }, { criterion: 'Security scanning (SAST/container scan)', maxPoints: 6, guidance: '' }, { criterion: 'Kubernetes deployment with rollback strategy', maxPoints: 7, guidance: '' }] } },
+        ],
+      },
+      {
+        title: 'Kubernetes & IaC',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'Kubernetes Pod vs Deployment', body: 'What is the primary advantage of using a Deployment over creating Pods directly?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['kubernetes', 'deployments'], config: { options: [{ label: 'Deployments are faster to create', value: 'A' }, { label: 'Deployments provide self-healing and rolling updates', value: 'B' }, { label: 'Deployments use less memory', value: 'C' }, { label: 'Pods cannot run containers', value: 'D' }], correct: 'B', explanation: 'Deployments manage ReplicaSets to ensure desired state and support rolling updates.' } },
+          { type: 'SHORT_ANSWER', title: 'Terraform State Management', body: 'What is Terraform state and what problems arise from storing it locally in a team environment? What is the recommended solution?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['terraform', 'iac', 'state'], config: {} },
+        ],
+      },
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'QA / Test Engineer Assessment',
+    description: 'Tests manual testing, test automation, API testing, and QA strategy.',
+    roleType: 'qa-engineer',
+    instructions: 'Answer all questions honestly — there are no trick questions.',
+    timeLimit: 60, passingScore: 70,
+    templateSlug: 'qa-engineer-starter',
+    sections: [
+      {
+        title: 'Testing Fundamentals',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'Testing Pyramid', body: 'According to the testing pyramid, which type of test should you have the most of?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['testing', 'strategy'], config: { options: [{ label: 'E2E / UI Tests', value: 'A' }, { label: 'Integration Tests', value: 'B' }, { label: 'Unit Tests', value: 'C' }, { label: 'Manual Tests', value: 'D' }], correct: 'C', explanation: 'The testing pyramid recommends many cheap unit tests at the base, fewer integration, fewest E2E.' } },
+          { type: 'SHORT_ANSWER', title: 'Writing a Test Plan', body: 'A new "forgot password" feature is being released. Write a brief test plan covering functional, edge case, and security test scenarios.', points: 20, difficulty: 'medium', evaluator: 'manual', skillTags: ['test-planning', 'qa'], config: {} },
+          { type: 'SCENARIO', title: 'Bug Report Quality', body: 'You find a bug where submitting a form with an empty email field shows a 500 error instead of a validation message. Write a complete, developer-ready bug report.', points: 20, difficulty: 'easy', evaluator: 'manual', skillTags: ['bug-reporting', 'qa'], config: { rubric: [{ criterion: 'Clear title summarising the issue', maxPoints: 5, guidance: '' }, { criterion: 'Steps to reproduce (numbered)', maxPoints: 5, guidance: '' }, { criterion: 'Expected vs actual result', maxPoints: 5, guidance: '' }, { criterion: 'Environment, severity, and suggested fix', maxPoints: 5, guidance: '' }] } },
+        ],
+      },
+      {
+        title: 'Test Automation',
+        questions: [
+          { type: 'CODING_CHALLENGE', title: 'Cypress/Playwright Selector', body: 'Write a Playwright test that:\n1. Navigates to `/login`\n2. Fills in email and password\n3. Clicks the submit button\n4. Asserts the user is redirected to `/dashboard`', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['playwright', 'automation', 'e2e'], config: { language: 'javascript', starterCode: "const { test, expect } = require('@playwright/test');\n\ntest('user can log in', async ({ page }) => {\n  // your code here\n});", testCases: [] } },
+        ],
+      },
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'Network Security Engineer Assessment',
+    description: 'Tests network protocols, security concepts, threat analysis, and security tooling.',
+    roleType: 'network-security',
+    instructions: 'Answer all questions based on current industry best practices.',
+    timeLimit: 60, passingScore: 70,
+    templateSlug: 'network-security-starter',
+    sections: [
+      {
+        title: 'Security Fundamentals',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'OSI Model — Attack Surface', body: 'A SQL injection attack primarily targets which OSI layer?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['security', 'osi', 'sql-injection'], config: { options: [{ label: 'Layer 3 — Network', value: 'A' }, { label: 'Layer 4 — Transport', value: 'B' }, { label: 'Layer 7 — Application', value: 'C' }, { label: 'Layer 2 — Data Link', value: 'D' }], correct: 'C', explanation: 'SQL injection exploits application logic at Layer 7.' } },
+          { type: 'MULTIPLE_CHOICE', title: 'Zero Trust Model', body: 'What is the core principle of Zero Trust security?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['security', 'zero-trust'], config: { options: [{ label: 'Trust users inside the corporate network by default', value: 'A' }, { label: 'Never trust, always verify — regardless of network location', value: 'B' }, { label: 'Block all external traffic', value: 'C' }, { label: 'Use VPN for all connections', value: 'D' }], correct: 'B', explanation: 'Zero Trust assumes no implicit trust based on network location.' } },
+          { type: 'SCENARIO', title: 'Incident Response Plan', body: 'Your company detects unusual outbound traffic from an internal server at 2am. Walk through your incident response process from detection to resolution.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['incident-response', 'security', 'forensics'], config: { rubric: [{ criterion: 'Immediate containment (isolate the host)', maxPoints: 7, guidance: '' }, { criterion: 'Evidence collection and logging review', maxPoints: 6, guidance: '' }, { criterion: 'Root cause analysis', maxPoints: 6, guidance: '' }, { criterion: 'Remediation and post-incident review', maxPoints: 6, guidance: '' }] } },
+        ],
+      },
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'Machine Learning Engineer Assessment',
+    description: 'Tests ML fundamentals, model training, evaluation, feature engineering, and MLOps.',
+    roleType: 'ml-engineer',
+    instructions: 'Answer all questions. Code may be Python/NumPy/Pandas/scikit-learn.',
+    timeLimit: 75, passingScore: 70,
+    templateSlug: 'ml-engineer-starter',
+    sections: [
+      {
+        title: 'ML Fundamentals',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'Bias-Variance Tradeoff', body: 'A model that performs well on training data but poorly on test data is suffering from:', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['ml', 'bias-variance'], config: { options: [{ label: 'High bias', value: 'A' }, { label: 'High variance (overfitting)', value: 'B' }, { label: 'Underfitting', value: 'C' }, { label: 'Data leakage', value: 'D' }], correct: 'B', explanation: 'High variance / overfitting means the model memorised training data and generalises poorly.' } },
+          { type: 'MULTIPLE_CHOICE', title: 'Cross-Validation', body: 'What is the purpose of k-fold cross-validation?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['ml', 'evaluation', 'cross-validation'], config: { options: [{ label: 'To speed up model training', value: 'A' }, { label: 'To get a more reliable estimate of model performance on unseen data', value: 'B' }, { label: 'To prevent gradient vanishing', value: 'C' }, { label: 'To normalise features', value: 'D' }], correct: 'B', explanation: 'k-fold CV gives a robust performance estimate by training/evaluating on different data splits.' } },
+          { type: 'CODING_CHALLENGE', title: 'Feature Normalisation', body: 'Write a Python function that normalises a list of numbers to the range [0, 1] using min-max scaling.\n\nExample: `[10, 20, 30]` → `[0.0, 0.5, 1.0]`', points: 15, difficulty: 'easy', evaluator: 'code', skillTags: ['python', 'ml', 'feature-engineering'], config: { language: 'python', starterCode: 'def min_max_scale(values):\n    # your code here\n    pass', testCases: [{ input: '[10, 20, 30]', expectedOutput: '[0.0, 0.5, 1.0]' }] } },
+        ],
+      },
+      {
+        title: 'Model Design & MLOps',
+        questions: [
+          { type: 'SCENARIO', title: 'ML System Design', body: 'Design an end-to-end ML pipeline to predict customer churn for a SaaS product. Include: data sources, feature engineering, model selection, training, evaluation, and deployment considerations.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['ml', 'mlops', 'system-design'], config: { rubric: [{ criterion: 'Identifies relevant features (usage, billing, support tickets)', maxPoints: 6, guidance: '' }, { criterion: 'Appropriate model choice with justification', maxPoints: 6, guidance: '' }, { criterion: 'Evaluation metrics (precision, recall, AUC for imbalanced classes)', maxPoints: 7, guidance: '' }, { criterion: 'Deployment and monitoring strategy', maxPoints: 6, guidance: '' }] } },
+        ],
+      },
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'LLM / AI Engineer Assessment',
+    description: 'Tests prompt engineering, RAG architecture, LLM APIs, fine-tuning concepts, and AI safety.',
+    roleType: 'ai-llm-engineer',
+    instructions: 'Answer all questions. Practical experience with LLM APIs is expected.',
+    timeLimit: 60, passingScore: 70,
+    templateSlug: 'ai-llm-engineer-starter',
+    sections: [
+      {
+        title: 'Prompt Engineering & LLM APIs',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'Temperature Parameter', body: 'What effect does setting `temperature=0` have on an LLM\'s output?', points: 10, difficulty: 'easy', evaluator: 'multiple_choice', skillTags: ['llm', 'prompt-engineering'], config: { options: [{ label: 'Makes the output more creative and random', value: 'A' }, { label: 'Makes the output deterministic and focused on the highest-probability tokens', value: 'B' }, { label: 'Speeds up inference', value: 'C' }, { label: 'Reduces token count', value: 'D' }], correct: 'B', explanation: 'Temperature=0 makes the model greedy, always picking the most probable next token.' } },
+          { type: 'CODING_CHALLENGE', title: 'Build a Chat Completion Call', body: 'Write Python code that calls an OpenAI-compatible chat completion API to answer a user\'s question. Include a system prompt that instructs the model to respond concisely and only in English.', points: 20, difficulty: 'medium', evaluator: 'code', skillTags: ['llm', 'openai', 'api'], config: { language: 'python', starterCode: 'import openai\n\nclient = openai.OpenAI(api_key="YOUR_KEY")\n\ndef ask(question: str) -> str:\n    # your code here\n    pass', testCases: [] } },
+          { type: 'SHORT_ANSWER', title: 'Hallucination Mitigation', body: 'What are three concrete techniques to reduce hallucinations when using an LLM in a production application?', points: 15, difficulty: 'medium', evaluator: 'manual', skillTags: ['llm', 'hallucination', 'rag'], config: {} },
+        ],
+      },
+      {
+        title: 'RAG & Architecture',
+        questions: [
+          { type: 'SCENARIO', title: 'Design a RAG System', body: 'Design a Retrieval-Augmented Generation (RAG) system for a company knowledge base with 10,000 documents. Include: document ingestion, chunking strategy, vector store, retrieval, and response generation.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['rag', 'vector-db', 'llm', 'architecture'], config: { rubric: [{ criterion: 'Document chunking strategy with overlap', maxPoints: 6, guidance: '' }, { criterion: 'Embedding model selection and vector store', maxPoints: 6, guidance: '' }, { criterion: 'Retrieval strategy (semantic + keyword hybrid)', maxPoints: 7, guidance: '' }, { criterion: 'Prompt construction and answer generation', maxPoints: 6, guidance: '' }] } },
+        ],
+      },
+    ],
+  });
+
+  await createAssessment(admin.id, {
+    title: 'AWS Cloud Engineer Assessment',
+    description: 'Tests AWS services, architecture patterns, IAM, serverless, and cost optimisation.',
+    roleType: 'aws-engineer',
+    instructions: 'Answer based on AWS best practices and Well-Architected Framework.',
+    timeLimit: 60, passingScore: 70,
+    templateSlug: 'aws-engineer-starter',
+    sections: [
+      {
+        title: 'AWS Core Services',
+        questions: [
+          { type: 'MULTIPLE_CHOICE', title: 'S3 vs EBS vs EFS', body: 'Which AWS storage service is best for sharing files between multiple EC2 instances simultaneously?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['aws', 'storage'], config: { options: [{ label: 'Amazon S3', value: 'A' }, { label: 'Amazon EBS', value: 'B' }, { label: 'Amazon EFS', value: 'C' }, { label: 'AWS Glacier', value: 'D' }], correct: 'C', explanation: 'EFS (Elastic File System) is a managed NFS that can be mounted by multiple EC2 instances.' } },
+          { type: 'MULTIPLE_CHOICE', title: 'IAM Policy Evaluation', body: 'If an IAM user has an explicit Deny on S3:DeleteObject and a separate policy with Allow on S3:*, what is the result when they try to delete an S3 object?', points: 10, difficulty: 'medium', evaluator: 'multiple_choice', skillTags: ['aws', 'iam', 'security'], config: { options: [{ label: 'Allow — the Allow policy overrides', value: 'A' }, { label: 'Deny — explicit Deny always wins', value: 'B' }, { label: 'Depends on policy order', value: 'C' }, { label: 'Depends on resource ARN', value: 'D' }], correct: 'B', explanation: 'In AWS IAM, an explicit Deny always overrides any Allow.' } },
+          { type: 'SCENARIO', title: 'Serverless Architecture Design', body: 'Design a serverless architecture on AWS for an API that processes image uploads, extracts metadata using ML, and stores results in a database. Use AWS-native services and explain your choices.', points: 25, difficulty: 'hard', evaluator: 'manual', skillTags: ['aws', 'serverless', 'architecture'], config: { rubric: [{ criterion: 'S3 for upload + Lambda trigger', maxPoints: 7, guidance: '' }, { criterion: 'Amazon Rekognition or SageMaker for ML', maxPoints: 6, guidance: '' }, { criterion: 'DynamoDB or RDS for metadata storage', maxPoints: 6, guidance: '' }, { criterion: 'API Gateway + Lambda for the API layer', maxPoints: 6, guidance: '' }] } },
+        ],
+      },
+    ],
+  });
+
   console.log('✅ Seeding complete!');
   console.log('');
   console.log('── Demo Login Credentials ─────────────────────────────────');
   console.log('  Admin:     admin@screenstack.io     / admin123');
   console.log('  Recruiter: recruiter@screenstack.io / recruiter123');
   console.log('───────────────────────────────────────────────────────────');
-  console.log('  10 starter assessment templates created.');
+  console.log('  20 starter assessment templates created.');
   console.log('  Start the app: npm run dev → http://localhost:3000');
 }
 
