@@ -1,7 +1,9 @@
+'use server';
 import { prisma } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import AssessmentDetailClient from './AssessmentDetailClient';
+import UseTemplateButton from './UseTemplateButton';
 
 export default async function AssessmentDetailPage({
   params,
@@ -59,9 +61,13 @@ export default async function AssessmentDetailPage({
           </div>
         </div>
         <div className="flex gap-3">
-          <Link href={`/admin/invites?assessment=${id}`} className="btn-primary">
-            Invite Candidate
-          </Link>
+          {assessment.isTemplate ? (
+            <UseTemplateButton assessmentId={id} />
+          ) : (
+            <Link href={`/admin/invites?assessment=${id}`} className="btn-primary">
+              Invite Candidate
+            </Link>
+          )}
         </div>
       </div>
 
