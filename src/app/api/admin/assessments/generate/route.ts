@@ -3,9 +3,6 @@ import { z } from 'zod';
 import Anthropic from '@anthropic-ai/sdk';
 import { getAuthUser } from '@/lib/auth';
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
 
 const schema = z.object({
   jobDescription: z.string().min(50, 'Job description must be at least 50 characters'),
@@ -17,6 +14,7 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   const user = await getAuthUser();
   if (!user) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   try {
     const body = schema.parse(await req.json());
