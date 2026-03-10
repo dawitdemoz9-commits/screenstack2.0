@@ -37,7 +37,7 @@ export async function POST(
       instructions:      source.instructions,
       timeLimit:         source.timeLimit,
       passingScore:      source.passingScore,
-      monitoringEnabled: source.monitoringEnabled,
+      monitoringEnabled: true,
       requireCamera:     source.requireCamera,
       requireMicrophone: source.requireMicrophone,
       requireScreen:     source.requireScreen,

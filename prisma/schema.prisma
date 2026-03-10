@@ -54,7 +54,7 @@ model Assessment {
   passingScore Int     @default(70) // percentage required to pass
 
   // Monitoring settings
-  monitoringEnabled Boolean @default(false)
+  monitoringEnabled Boolean @default(true)
   requireCamera     Boolean @default(false)
   requireMicrophone Boolean @default(false)
   requireScreen     Boolean @default(false)
