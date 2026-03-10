@@ -42,16 +42,22 @@ async function createAssessment(
     }[];
   }
 ) {
+  const existing = await prisma.assessment.findUnique({ where: { templateSlug: data.templateSlug } });
+  if (existing) {
+    await prisma.assessment.update({ where: { id: existing.id }, data: { monitoringEnabled: true } });
+    return;
+  }
   const assessment = await prisma.assessment.create({
     data: {
-      title:        data.title,
-      description:  data.description,
-      roleType:     data.roleType,
-      instructions: data.instructions,
-      timeLimit:    data.timeLimit,
-      passingScore: data.passingScore,
-      isTemplate:   true,
-      templateSlug: data.templateSlug,
+      title:             data.title,
+      description:       data.description,
+      roleType:          data.roleType,
+      instructions:      data.instructions,
+      timeLimit:         data.timeLimit,
+      passingScore:      data.passingScore,
+      monitoringEnabled: true,
+      isTemplate:        true,
+      templateSlug:      data.templateSlug,
       createdById,
     },
   });
@@ -94,6 +100,9 @@ async function createAssessment(
 
 async function main() {
   console.log('🌱 Seeding Skillio database…');
+
+  // ── Enable monitoring on all existing assessments ──────────────────────────
+  await prisma.assessment.updateMany({ data: { monitoringEnabled: true } });
 
   // ── Users ──────────────────────────────────────────────────────────────────
 
