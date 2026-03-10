@@ -63,11 +63,13 @@ export default function InvitesClient({
       if (!res.ok) { setError(data.error || 'Failed to send invite'); return; }
       setGeneratedLink(data.assessmentLink);
       setInvites([data.invite, ...invites]);
+      navigator.clipboard.writeText(data.assessmentLink);
+      setCopied('generated');
+      setTimeout(() => setCopied(null), 2000);
       setForm({ ...form, assessmentId: '', candidateName: '', candidateEmail: '', message: '' });
-    } catch { setError('Network error.'); }
-    finally { setSaving(false); }
-  }
-
+      } catch { setError('Network error.'); }
+      finally { setSaving(false); }
+       }
   function copyLink(link: string, id: string) {
     navigator.clipboard.writeText(link);
     setCopied(id);
