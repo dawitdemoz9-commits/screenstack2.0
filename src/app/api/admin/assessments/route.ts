@@ -11,7 +11,7 @@ const createSchema = z.object({
   instructions:       z.string().optional(),
   timeLimit:          z.number().int().min(5).max(360).default(60),
   passingScore:       z.number().int().min(0).max(100).default(70),
-  monitoringEnabled:  z.boolean().default(false),
+  monitoringEnabled:  z.boolean().default(true),
   requireCamera:      z.boolean().default(false),
   requireMicrophone:  z.boolean().default(false),
   requireScreen:      z.boolean().default(false),
