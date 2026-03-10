@@ -88,9 +88,13 @@ export async function POST(req: NextRequest) {
 
     // Generate signed access token for the candidate link
     const accessToken = await signInviteToken(invite.id, candidate.id);
-    await prisma.invite.update({
+    const inviteWithRelations = await prisma.invite.update({
       where: { id: invite.id },
       data:  { accessToken },
+      include: {
+        candidate:  { select: { name: true, email: true } },
+        assessment: { select: { title: true, roleType: true } },
+      },
     });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -109,7 +113,7 @@ export async function POST(req: NextRequest) {
       assessmentId: body.assessmentId,
     });
 
-    return NextResponse.json({ invite, assessmentLink }, { status: 201 });
+    return NextResponse.json({ invite: inviteWithRelations, assessmentLink }, { status: 201 });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation error', details: err.errors }, { status: 400 });
