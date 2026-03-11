@@ -114,7 +114,7 @@ async function main() {
     update: {},
     create: {
       email:        'admin@skillio.io',
-      name:         'Alex Admin',
+      name:         'Dawit Admin',
       passwordHash: adminHash,
       role:         'ADMIN',
     },
@@ -125,12 +125,30 @@ async function main() {
     update: {},
     create: {
       email:        'recruiter@skillio.io',
-      name:         'Rachel Recruiter',
+      name:         'Recruiter',
       passwordHash: recruiterHash,
       role:         'RECRUITER',
     },
   });
-
+for (const u of [
+  { email: 'matt.gorman1@talentmsh.com',   name: 'matt gorman',    password: 'MSH2026'   },
+  { email: 'ballard.taleck@talentmsh.com', name: 'ballard taleck', password: 'MSH1_2026' },
+  { email: 'kurt.vosburgh1@talentmsh.com', name: 'kurt vosburgh',  password: 'Msh2026!'  },
+  { email: 'daryl.polydor@talentmsh.com',  name: 'daryl polydor',  password: 'MSh2026'   },
+  { email: 'sami.adler@talentmsh.com',     name: 'sami adler',     password: 'msH2026'   },
+  { email: 'oz.rashid@talentmsh.com',      name: 'oz rashid',      password: 'MSH2026^'  },
+]) {
+  await prisma.user.upsert({
+    where:  { email: u.email },
+    update: {},
+    create: {
+      email:        u.email,
+      name:         u.name,
+      passwordHash: await bcrypt.hash(u.password, 12),
+      role:         'RECRUITER',
+    },
+  });
+}
   const uid = admin.id;
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -2455,8 +2473,14 @@ export class OrderProcessingStack extends cdk.Stack {
   console.log('✅ Seeding complete!');
   console.log('');
   console.log('── Demo Login Credentials ─────────────────────────────────');
-  console.log('  Admin:     admin@skillio.io     / admin123');
-  console.log('  Recruiter: recruiter@skillio.io / recruiter123');
+  console.log('  Admin:     admin@skillio.io              / admin123');
+  console.log('  Recruiter: recruiter@skillio.io          / recruiter123');
+  console.log('  Recruiter: matt.gorman1@talentmsh.com    / MSH2026');
+  console.log('  Recruiter: kurt.vosburgh1@talentmsh.com  / MSH_2026');
+  console.log('  Recruiter: ballard.taleck@talentmsh.com  / MSH1_2026');
+  console.log('  Recruiter: daryl.polydor@talentmsh.com   / MSh2026');
+  console.log('  Recruiter: sami.adler@talentmsh.com      / msH2026');
+  console.log('  Recruiter: oz.rashid@talentmsh.com       / MSH2026^');
   console.log('───────────────────────────────────────────────────────────');
   console.log('  32 starter assessment templates created.');
   console.log('  Start the app: npm run dev → http://localhost:3000');

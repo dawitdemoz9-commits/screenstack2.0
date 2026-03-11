@@ -2,16 +2,18 @@ import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 import Link from 'next/link';
 
-async function getStats() {
+async function getStats(userId: string, isAdmin: boolean) {
+  const userFilter = isAdmin ? undefined : userId;
+
   const [assessments, candidates, invites, attempts] = await Promise.all([
-    prisma.assessment.count({ where: { isActive: true, isTemplate: false } }),
-    prisma.candidate.count(),
-    prisma.invite.count(),
-    prisma.attempt.count({ where: { status: 'COMPLETED' } }),
+    prisma.assessment.count({ where: { isActive: true, isTemplate: false, ...(userFilter ? { createdById: userFilter } : {}) } }),
+    prisma.candidate.count({ where: userFilter ? { invites: { some: { createdById: userFilter } } } : {} }),
+    prisma.invite.count({ where: userFilter ? { createdById: userFilter } : {} }),
+    prisma.attempt.count({ where: { status: 'COMPLETED', ...(userFilter ? { invite: { createdById: userFilter } } : {}) } }),
   ]);
 
   const recent = await prisma.attempt.findMany({
-    where: { status: 'COMPLETED' },
+    where: { status: 'COMPLETED', ...(userFilter ? { invite: { createdById: userFilter } } : {}) },
     include: {
       candidate:  { select: { name: true, email: true } },
       assessment: { select: { title: true, roleType: true } },
@@ -25,7 +27,7 @@ async function getStats() {
 
 export default async function AdminDashboard() {
   const user = await getAuthUser();
-  const stats = await getStats();
+const stats = await getStats(user?.id ?? '', user?.role === 'ADMIN');
 
   const statCards = [
     { label: 'Assessments',        value: stats.assessments, href: '/admin/assessments', color: 'brand' },
