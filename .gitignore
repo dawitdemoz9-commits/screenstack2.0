@@ -32,3 +32,4 @@ yarn-debug.log*
 
 # Optional: keep .env.example (it has no real secrets)
 !.env.example
+"sScrentak complete.txt" 
